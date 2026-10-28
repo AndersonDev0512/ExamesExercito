@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "candidata": "Stephanny dos Santos Ramos",
+    "cidade": "Campo Grande/MS",
+    "prazo_interno": "10/11/2026",
+    "apresentacao": "12/11/2026"
+  },
+  "iframe_url": "https://www.gov.br/defesa/pt-br",
+  "agenda": [
+    {"data":"29/10/2026","horario":"06:00","tipo":"Toxicológico de larga janela","local":"Labormed (1741)","endereco":"Rua Dr. Arthur Jorge, 1080","status":"Agendado","observacao":"Ordem de chegada. Pedir protocolo e código de acompanhamento."},
+    {"data":"30/10/2026","horario":"07:55","tipo":"Preventivo / colpocitológico","local":"Ultramedical","endereco":"Confirmar na mensagem da clínica","status":"Agendado","observacao":"3 dias de abstinência sexual; não estar menstruada; levar edital, documento e cartão PAX."},
+    {"data":"30/10/2026","horario":"09:00","tipo":"Ultrassonografia das mamas","local":"Ultramedical","endereco":"Confirmar na mensagem da clínica","status":"Agendado","observacao":"Levar exames anteriores, se houver."},
+    {"data":"03/11/2026","horario":"07:00","tipo":"Coleta parcial de exames pelo SUS","local":"USF São Francisco","endereco":"Campo Grande/MS","status":"Agendado","observacao":"Jejum. HDL, LDL e T4 Livre serão particulares."},
+    {"data":"04/11/2026","horario":"09:45","tipo":"Audiometria tonal e vocal","local":"Audioclin (7222)","endereco":"Campo Grande/MS","status":"Agendado","observacao":"R$ 120; laudo na hora; sem pedido médico; dinheiro ou Pix."}
+  ],
+  "exames": [
+    {"ordem":1,"exame":"Toxicológico >90 dias","local":"Labormed (1741)","valor":130,"prazo_data":"29/10 às 06h; até 10 dias úteis","status":"Agendado","pendencia":"Acompanhar resultado; prazo máximo pode alcançar 13/11"},
+    {"ordem":2,"exame":"Laboratoriais de rotina pelo SUS","local":"USF São Francisco","valor":0,"prazo_data":"03/11 às 07h","status":"SUS","pendencia":"HDL, LDL e T4 Livre fora do SUS"},
+    {"ordem":3,"exame":"Laboratoriais particulares + HDL, LDL e T4 Livre","local":"Ultramedical","valor":587,"prazo_data":"A confirmar","status":"Quase fechado","pendencia":"Receber orçamento atualizado"},
+    {"ordem":4,"exame":"Aptidão psicológica para arma","local":"Andrea (7415) ou Carolina (0602)","valor":250,"prazo_data":"A definir","status":"Pendente","pendencia":"Escolher e agendar"},
+    {"ordem":5,"exame":"RX coluna com ângulo de Cobb","local":"Ultramedical","valor":200,"prazo_data":"A confirmar","status":"Quase fechado","pendencia":"Confirmar Cobb no laudo"},
+    {"ordem":6,"exame":"RX panorâmico membros superiores bilateral","local":"Ultramedical","valor":180,"prazo_data":"A confirmar","status":"Quase fechado","pendencia":"Confirmar abrangência"},
+    {"ordem":7,"exame":"RX panorâmico membros inferiores bilateral","local":"Ultramedical","valor":200,"prazo_data":"A confirmar","status":"Quase fechado","pendencia":"Confirmar abrangência"},
+    {"ordem":8,"exame":"Escanometria","local":"Ultramedical","valor":90,"prazo_data":"A confirmar","status":"Quase fechado","pendencia":"Confirmar medidas no laudo"},
+    {"ordem":9,"exame":"RX da bacia","local":"Ultramedical","valor":90,"prazo_data":"A confirmar","status":"Quase fechado","pendencia":"Confirmar laudo e imagem"},
+    {"ordem":10,"exame":"RX de tórax PA e perfil","local":"Ultramedical","valor":90,"prazo_data":"A confirmar","status":"Quase fechado","pendencia":"Confirmar prazo"},
+    {"ordem":11,"exame":"Ultrassonografia das mamas","local":"Ultramedical","valor":200,"prazo_data":"30/10 às 09h","status":"Agendado","pendencia":"Levar exames anteriores"},
+    {"ordem":12,"exame":"Ultrassonografia das axilas","local":"Não exigido","valor":0,"prazo_data":"Não se aplica","status":"Retirado","pendencia":"Nenhuma"},
+    {"ordem":13,"exame":"ECG em repouso com laudo","local":"Ultramedical","valor":90,"prazo_data":"A confirmar","status":"Quase fechado","pendencia":"Confirmar laudo médico"},
+    {"ordem":14,"exame":"Audiometria tonal e vocal","local":"Audioclin (7222)","valor":120,"prazo_data":"04/11 às 09h45","status":"Agendado","pendencia":"Comparecer"},
+    {"ordem":15,"exame":"Preventivo / colpocitológico","local":"Ultramedical","valor":120,"prazo_data":"30/10 às 07h55","status":"Agendado","pendencia":"Confirmar prazo do laudo"},
+    {"ordem":16,"exame":"Avaliação oftalmológica completa","local":"Meu Oftalmo (1246)","valor":200,"prazo_data":"A confirmar","status":"Em cotação","pendencia":"Confirmar todos os itens, CRM e parecer"},
+    {"ordem":17,"exame":"Avaliação odontológica + panorâmica","local":"Em cotação","valor":null,"prazo_data":"Até 10/11","status":"Pendente","pendencia":"Panorâmica FAODO/UFMS (9766) R$ 60; avaliação ainda sem valor"}
+  ],
+  "sus": {
+    "realizados": ["Colesterol total","Creatinina","Glicose","Hemoglobina glicada","Potássio","Triglicerídeos","Hemograma completo","Sódio","TSH"],
+    "nao_realizados": ["Colesterol HDL","Colesterol LDL","T4 Livre"]
+  },
+  "custos_base": [
+    {"grupo":"Laboratoriais particulares","valor":587,"observacao":"Falta adicionar HDL, LDL e T4 Livre"},
+    {"grupo":"Toxicológico","valor":130,"observacao":"Labormed"},
+    {"grupo":"Psicológico estimado","valor":250,"observacao":"Ainda não escolhido"},
+    {"grupo":"Radiologia + mamas + ECG + colpocitológico","valor":1260,"observacao":"Ultramedical"},
+    {"grupo":"Audiometria","valor":120,"observacao":"Audioclin"},
+    {"grupo":"Oftalmológico provisório","valor":200,"observacao":"Meu Oftalmo; confirmar itens"}
+  ],
+  "radiologia": [
+    {"opcao":"Ultramedical","total":1260,"inclui":"Imagem, mamas, ECG e colpocitológico","situacao":"Favorita; confirmar especificações"},
+    {"opcao":"Alfa Care + ECG/colpocitológico Ultramedical","total":1400,"inclui":"Imagem, mamas, ECG e colpocitológico","situacao":"Segunda opção"},
+    {"opcao":"ProExames PAX mínimo + ECG/colpocitológico","total":1596,"inclui":"Cenário mínimo","situacao":"Dúvidas sobre duplicidades"}
+  ],
+  "contatos": [
+    {"categoria":"Toxicológico","nome":"Labormed (1741)","contato":"(67) 99236-1741","status":"Escolhido"},
+    {"categoria":"Audiometria","nome":"Audioclin (7222)","contato":"(67) 99263-7222","status":"Agendado"},
+    {"categoria":"Psicológico","nome":"Andrea Orlandini (7415)","contato":"(67) 99945-7415","status":"Opção"},
+    {"categoria":"Psicológico","nome":"Carolina Quevedo (0602)","contato":"(67) 98469-0602","status":"Opção"},
+    {"categoria":"Oftalmologia","nome":"Meu Oftalmo (1246)","contato":"(67) 9985-1246","status":"R$ 200; confirmar itens"},
+    {"categoria":"Oftalmologia","nome":"IOMS (7213)","contato":"(67) 99229-7213","status":"Cotar"},
+    {"categoria":"Oftalmologia","nome":"CDO (0302)","contato":"(67) 98181-0302","status":"Cotar"},
+    {"categoria":"Odontologia","nome":"Odontoclinic Centro (0000)","contato":"(67) 98464-0000","status":"Cotar"},
+    {"categoria":"Odontologia","nome":"Dr. Gerson Rezende (3717)","contato":"(67) 99676-3717","status":"Cotar"},
+    {"categoria":"Odontologia","nome":"Amaral Odontologia (5589)","contato":"(67) 98201-5589","status":"Cotar"},
+    {"categoria":"Panorâmica","nome":"FAODO/UFMS (9766)","contato":"(67) 99195-9766","status":"R$ 60; exige encaminhamento"}
+  ],
+  "prioridades": [
+    "Realizar toxicológico e guardar protocolo",
+    "Realizar preventivo e ultrassom das mamas em 30/10",
+    "Escolher e agendar o psicológico",
+    "Receber orçamento laboratorial atualizado",
+    "Confirmar radiologia, ECG e colpocitológico",
+    "Fechar oftalmologia e odontologia"
+  ]
+}
