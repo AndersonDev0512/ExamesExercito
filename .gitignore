@@ -16,6 +16,7 @@ ENV/
 
 # Streamlit secrets and local config
 .streamlit/secrets.toml
+secrets.toml
 
 # IDEs
 .vscode/
@@ -33,7 +34,9 @@ desktop.ini
 .mypy_cache/
 .ruff_cache/
 
-# Local exports
+# Local exports (laudos, orçamentos e cópias de dados pessoais)
 *.xlsx
 *.pdf
 *.zip
+data.backup*.json
+data (*).json
