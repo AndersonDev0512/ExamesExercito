@@ -34,6 +34,7 @@ STATUS_LIST = [
     "Aguardando resposta",
     "Quase fechado",
     "Escolhido",
+    "Fechado",
     "Agendado",
     "Realizado",
     "Resultado recebido",
@@ -55,6 +56,7 @@ STATUS_CORES = {
     "Realizado": VERDE,
     "Resultado recebido": VERDE,
     "Escolhido": ("#ccfbf1", "#115e59"),
+    "Fechado": ("#d1fae5", "#065f46"),
     "Aguardando resposta": AMARELO,
     "Quase fechado": AMARELO,
     "Não iniciado": VERMELHO,
@@ -78,6 +80,7 @@ STATUS_PROGRESSO = {
     "Aguardando resposta": 2,
     "Quase fechado": 3,
     "Escolhido": 4,
+    "Fechado": 5,
     "Agendado": 5,
     "SUS": 5,
     "Realizado": 6,
@@ -139,7 +142,6 @@ def init_state():
             st.error(f"Erro ao carregar data.json: {exc}")
             st.stop()
         st.session_state.dirty = False
-    st.session_state.setdefault("iframe_url", "")
 
 
 def mark_dirty():
@@ -269,17 +271,6 @@ def search_df(df, query):
     return df[mask]
 
 
-def normalize_url(url):
-    url = (url or "").strip()
-    if url and not re.match(r"^https?://", url, re.IGNORECASE):
-        url = "https://" + url
-    return url
-
-
-def is_valid_url(url):
-    return bool(re.match(r"^https?://[^\s/$.?#][^\s]*\.[^\s]+", url or "", re.IGNORECASE))
-
-
 # ---------------------------------------------------------------------------
 # Regras de negócio
 # ---------------------------------------------------------------------------
@@ -295,7 +286,84 @@ def agenda_by_exam(data):
     return mapa
 
 
-def assess_risk(exame, data_agendada, prazo, hoje, dias_alerta):
+def holidays(meta):
+    return {d for d in map(parse_date, meta.get("feriados", [])) if d}
+
+
+def add_business_days(inicio, dias, feriados):
+    d, contados = inicio, 0
+    while contados < dias:
+        d += timedelta(days=1)
+        if d.weekday() < 5 and d not in feriados:
+            contados += 1
+    return d
+
+
+def latest_start(limite, dias, feriados):
+    """Último dia útil em que o exame pode ser feito para o resultado sair até o limite."""
+    d = limite
+    while d.weekday() >= 5 or d in feriados or add_business_days(d, dias, feriados) > limite:
+        d -= timedelta(days=1)
+    return d
+
+
+def is_walk_in(exame, data_agendada):
+    """Exame por ordem de chegada ainda não realizado e sem compromisso na agenda."""
+    return bool(
+        exame.get("ordem_chegada")
+        and not data_agendada
+        and not exame.get("data_realizacao")
+        and exame.get("status") not in STATUS_CONCLUIDOS | STATUS_IGNORADOS
+    )
+
+
+def expected_result(exame, data_agendada, meta, hoje=None):
+    """Previsão do resultado: (data, fonte, fazer_até).
+
+    fonte é "informado" (prazo_resultado no JSON), "média" (prazo_dias_uteis
+    contado da realização ou do agendamento) ou "se feito hoje" (exame por
+    ordem de chegada, contado a partir de hoje). fazer_até é a data-limite
+    para realizar o exame quando ele ainda não tem data.
+    """
+    informado = parse_date(exame.get("prazo_resultado"))
+    if informado:
+        return informado, "informado", None
+    dias = exame.get("prazo_dias_uteis")
+    if dias is None:
+        return None, None, None
+    feriados = holidays(meta)
+    base = parse_date(exame.get("data_realizacao")) or data_agendada
+    if base:
+        return add_business_days(base, dias, feriados), "média", None
+    prazo = parse_date(meta.get("prazo_resultados"))
+    fazer_ate = latest_start(prazo, dias, feriados) if prazo else None
+    if hoje and is_walk_in(exame, data_agendada):
+        return add_business_days(hoje, dias, feriados), "se feito hoje", fazer_ate
+    return None, None, fazer_ate
+
+
+def earliest_result(exame, data_agendada, meta, hoje=None):
+    """Data mais cedo do resultado, quando o prazo é uma faixa (prazo_dias_uteis_min)."""
+    dias_min = exame.get("prazo_dias_uteis_min")
+    if dias_min is None or exame.get("prazo_resultado"):
+        return None
+    base = parse_date(exame.get("data_realizacao")) or data_agendada
+    if not base and hoje and is_walk_in(exame, data_agendada):
+        base = hoje
+    return add_business_days(base, dias_min, holidays(meta)) if base else None
+
+
+def validity_start(exame, meta):
+    """Data mínima do exame: data da inspeção menos a validade (edital: 30 dias; Beta HCG: 15)."""
+    inspecao = parse_date(meta.get("apresentacao"))
+    dias = exame.get("validade_dias", meta.get("validade_dias_padrao"))
+    if not inspecao or dias is None:
+        return None
+    return inspecao - timedelta(days=int(dias))
+
+
+def assess_risk(exame, data_agendada, prazo, hoje, dias_alerta, prazo_resultado=None, fazer_ate=None, meta=None,
+                resultado_minimo=None):
     """Retorna (nível, motivo). Níveis: Crítico, Alto, Atenção ou vazio."""
     status = exame.get("status")
     if status in STATUS_IGNORADOS or status == "Resultado recebido":
@@ -303,15 +371,40 @@ def assess_risk(exame, data_agendada, prazo, hoje, dias_alerta):
     if prazo is None:
         return "Atenção", "Prazo interno não definido"
 
-    prazo_resultado = parse_date(exame.get("prazo_resultado"))
     dias = (prazo - hoje).days
 
+    validade = validity_start(exame, meta) if meta else None
+    data_exame = parse_date(exame.get("data_realizacao")) or data_agendada
+    if validade and data_exame and data_exame < validade:
+        return "Crítico", f"Fora da validade do edital: precisa ser datado a partir de {fmt_date(validade)}"
+
+    if is_walk_in(exame, data_agendada):
+        se_hoje = f"; se feito hoje, resultado em {fmt_date(prazo_resultado)}" if prazo_resultado else ""
+        if fazer_ate and hoje > fazer_ate:
+            return "Crítico", f"Ordem de chegada: precisava ser feito até {fmt_date(fazer_ate)}{se_hoje}"
+        if fazer_ate:
+            nivel = "Alto" if (fazer_ate - hoje).days <= dias_alerta else "Atenção"
+            return nivel, f"Ordem de chegada: fazer até {fmt_date(fazer_ate)}{se_hoje}"
+        nivel = "Alto" if dias <= dias_alerta else "Atenção"
+        return nivel, f"Ordem de chegada: prazo do resultado não informado; faltam {dias} dias para {fmt_date(prazo)}"
+
     if prazo_resultado and prazo_resultado > prazo:
+        if resultado_minimo and resultado_minimo <= prazo:
+            return "Alto", (
+                f"Resultado entre {fmt_date(resultado_minimo)} e {fmt_date(prazo_resultado)}; "
+                f"no pior caso, após {fmt_date(prazo)}"
+            )
         return "Crítico", f"Resultado previsto até {fmt_date(prazo_resultado)}, após {fmt_date(prazo)}"
     if data_agendada and data_agendada > prazo:
         return "Crítico", f"Agendado para {fmt_date(data_agendada)}, após {fmt_date(prazo)}"
     if dias < 0:
         return "Crítico", f"Prazo de {fmt_date(prazo)} vencido sem resultado"
+    if status in STATUS_PRE_AGENDAMENTO and not data_agendada and fazer_ate:
+        if hoje > fazer_ate:
+            return "Crítico", f"Precisava ser feito até {fmt_date(fazer_ate)} para sair até {fmt_date(prazo)}"
+        if (fazer_ate - hoje).days <= dias_alerta:
+            return "Alto", f"Fazer até {fmt_date(fazer_ate)} ({exame['prazo_dias_uteis']} dias úteis para o resultado)"
+        return "Atenção", f"Fazer até {fmt_date(fazer_ate)}"
     if status in STATUS_PRE_AGENDAMENTO and not data_agendada:
         if dias <= dias_alerta:
             return "Alto", f"Ainda não agendado; faltam {dias} dias para {fmt_date(prazo)}"
@@ -358,7 +451,9 @@ def build_exam_rows(data, hoje):
     for ex in sorted(data["exames"], key=lambda e: e.get("ordem", 0)):
         ag = agenda.get(ex["id"])
         data_ag = parse_date(ag["data"]) if ag else None
-        nivel, motivo = assess_risk(ex, data_ag, prazo, hoje, dias_alerta)
+        previsto, fonte, fazer_ate = expected_result(ex, data_ag, meta, hoje)
+        minimo = earliest_result(ex, data_ag, meta, hoje)
+        nivel, motivo = assess_risk(ex, data_ag, prazo, hoje, dias_alerta, previsto, fazer_ate, meta, minimo)
         rows.append({
             "id": ex["id"],
             "Ordem": ex.get("ordem", 0),
@@ -368,8 +463,13 @@ def build_exam_rows(data, hoje):
             "Clínica / profissional": provider_label(ex, contatos),
             "Valor": exam_value_label(ex, pacotes),
             "Tipo de valor": VALOR_TIPOS.get(ex.get("valor_tipo"), ex.get("valor_tipo") or ""),
-            "Data agendada": f'{fmt_date(data_ag)} {fmt_hora(ag["horario"])}' if ag else "—",
-            "Prazo do resultado": fmt_date(ex.get("prazo_resultado"), "A confirmar"),
+            "Data agendada": (
+                f'{fmt_date(data_ag)} {fmt_hora(ag["horario"])}' if ag
+                else f"{fmt_date(hoje)} — ordem de chegada" if is_walk_in(ex, data_ag)
+                else "—"
+            ),
+            "Válido a partir de": fmt_date(validity_start(ex, meta), ""),
+            "Prazo do resultado": "Não se aplica" if ex.get("status") in STATUS_IGNORADOS else result_label(previsto, fonte, fazer_ate, minimo),
             "Status": ex.get("status", ""),
             "Risco": nivel,
             "Motivo do risco": motivo,
@@ -386,6 +486,17 @@ def build_exam_rows(data, hoje):
     return rows
 
 
+def result_label(previsto, fonte, fazer_ate, minimo=None):
+    if previsto:
+        sufixo = {"média": " (média)", "se feito hoje": " (média, se feito hoje)"}.get(fonte, "")
+        if minimo and minimo < previsto:
+            return f"{fmt_date(minimo)} a {fmt_date(previsto)}{sufixo}"
+        return fmt_date(previsto) + sufixo
+    if fazer_ate:
+        return f"Fazer até {fmt_date(fazer_ate)}"
+    return "A confirmar"
+
+
 def is_paid(exame, pacotes):
     if exame.get("pacote"):
         return bool(pacotes.get(exame["pacote"], {}).get("pago"))
@@ -398,7 +509,141 @@ def agenda_status(exames):
     return min((e.get("status", "Agendado") for e in exames), key=lambda s: STATUS_PROGRESSO.get(s, 5))
 
 
-def build_agenda(data):
+def walk_in_items(data, hoje, contatos):
+    """Um compromisso no dia de hoje por clínica, reunindo os exames por ordem de chegada."""
+    meta = data["meta"]
+    prazo = parse_date(meta.get("prazo_resultados"))
+    agendados = agenda_by_exam(data)
+    por_contato = {}
+    for ex in sorted(data["exames"], key=lambda e: e.get("ordem", 0)):
+        ag = agendados.get(ex["id"])
+        if is_walk_in(ex, parse_date(ag["data"]) if ag else None):
+            por_contato.setdefault(ex.get("contato"), []).append(ex)
+
+    itens = []
+    for cid, exames in por_contato.items():
+        contato = contatos.get(cid) or {}
+        grupos, previstos = {}, []
+        for ex in exames:
+            previsto, _, fazer_ate = expected_result(ex, None, meta, hoje)
+            grupos.setdefault(ex.get("grupo", ""), []).append((previsto, fazer_ate))
+            if previsto:
+                previstos.append(previsto)
+        orientacoes = []
+        for grupo, lista in grupos.items():
+            previsto, fazer_ate = lista[0]
+            if fazer_ate:
+                detalhe = f"fazer até {fmt_date(fazer_ate)}; se feito hoje, resultado em {fmt_date(previsto)} (média)"
+            else:
+                detalhe = "prazo do resultado não informado"
+            orientacoes.append(f"{grupo} ({len(lista)}): {detalhe}")
+        ultimo = max(previstos) if previstos else None
+        itens.append({
+            "id": f"oc_{cid}",
+            "data": hoje,
+            "exame_ids": [e["id"] for e in exames],
+            "_resultado_risco": False,
+            "dt": datetime.combine(hoje, time(0, 0)),
+            "Data": fmt_date(hoje),
+            "Horário": "Ordem de chegada",
+            "Tipo de exame": "Ordem de chegada: " + ", ".join(grupos),
+            "Clínica": contato.get("nome", "A definir"),
+            "Clínica / profissional": contact_label(contato) if contato else "A definir",
+            "Final do contato": contato.get("final") or "—",
+            "Endereço": contato.get("endereco") or "A confirmar",
+            "Valor": "No pacote / orçamento",
+            "Status": agenda_status(exames),
+            "Previsto": True,
+            "Resultado previsto": result_label(ultimo, "se feito hoje", None) if ultimo else "A confirmar",
+            "_resultado_atrasado": bool(ultimo and prazo and ultimo > prazo),
+            "Orientações": orientacoes,
+            "Documentos": contato.get("documentos", []),
+            "Exames": [e.get("nome", "") for e in exames],
+        })
+    return itens
+
+
+def next_service_days(contato, hoje, ate, feriados):
+    """Próximos dias de atendimento do contato (campo dias_semana: 0=segunda … 6=domingo)."""
+    dias_semana = contato.get("dias_semana")
+    if not dias_semana or not ate:
+        return []
+    dias, d = [], hoje
+    while d <= ate:
+        if d.weekday() in dias_semana and d not in feriados:
+            dias.append(d)
+        d += timedelta(days=1)
+    return dias
+
+
+def pending_to_schedule(data, hoje):
+    """Exames que ainda precisam ser marcados: sem compromisso na agenda e fora da ordem de chegada."""
+    meta = data["meta"]
+    prazo = parse_date(meta.get("prazo_resultados"))
+    contatos = index_by_id(data["contatos"])
+    agendados = agenda_by_exam(data)
+    pendentes = []
+    for ex in sorted(data["exames"], key=lambda e: e.get("ordem", 0)):
+        ag = agendados.get(ex["id"])
+        data_ag = parse_date(ag["data"]) if ag else None
+        if data_ag or ex.get("status") not in STATUS_PRE_AGENDAMENTO or is_walk_in(ex, data_ag):
+            continue
+        _, _, fazer_ate = expected_result(ex, None, meta, hoje)
+        opcoes_ids = ex.get("opcoes_contato") or ([ex["contato"]] if ex.get("contato") else [])
+        opcoes = [contatos[c] for c in opcoes_ids if c in contatos]
+        pendentes.append({
+            "exame": ex,
+            "marcar_ate": fazer_ate or prazo,
+            "opcoes": opcoes,
+        })
+    return pendentes
+
+
+def render_pending(data, hoje):
+    pendentes = pending_to_schedule(data, hoje)
+    if not pendentes:
+        st.success("Nenhum exame pendente de marcar.")
+        return
+    st.markdown(f"#### 📌 Pendentes de marcar ({len(pendentes)})")
+    pacotes = index_by_id(data["pacotes"])
+    for item in pendentes:
+        ex = item["exame"]
+        with st.container(border=True):
+            dias = (item["marcar_ate"] - hoje).days if item["marcar_ate"] else None
+            cor = "#b91c1c" if dias is not None and dias <= 3 else "#92400e"
+            st.markdown(
+                f'<span class="tt" style="font-weight:700">{esc(ex.get("nome"))}</span> '
+                f'{badge_html(ex.get("status"))} {badge_html("A marcar", VERMELHO)}'
+                f'<div class="mt" style="color:{cor};font-weight:700;margin-top:4px">'
+                f'⏰ Marcar até {fmt_date(item["marcar_ate"])}'
+                + (f" (faltam {dias} dias)" if dias is not None and dias >= 0 else " (prazo vencido)")
+                + "</div>"
+                f'<div class="mt" style="color:#475569;font-size:.86rem">💰 {esc(exam_value_label(ex, pacotes))}</div>'
+                + (f'<div class="mt" style="color:#475569;font-size:.86rem">📝 {esc(ex.get("pendencias"))}</div>' if ex.get("pendencias") else ""),
+                unsafe_allow_html=True,
+            )
+            if item["opcoes"]:
+                st.caption("Opções para marcar:")
+                cols = st.columns(2)
+                for n, c in enumerate(item["opcoes"]):
+                    with cols[n % 2]:
+                        texto = f'**{contact_label(c)}** · {brl(c.get("valor"), "sem valor")} · {c.get("situacao", "")}'
+                        proximos = next_service_days(c, hoje, item["marcar_ate"], holidays(data["meta"]))
+                        if c.get("horario_atendimento"):
+                            texto += f'  \n🕑 {c["horario_atendimento"]}'
+                        if proximos:
+                            texto += "  \n📅 Próximos dias: " + ", ".join(fmt_dia_semana(d) for d in proximos)
+                        st.markdown(texto)
+                        link = whatsapp_url(c.get("telefone"))
+                        if link:
+                            st.link_button("💬 WhatsApp", link, width="stretch")
+                        else:
+                            st.caption("Número completo não cadastrado.")
+
+
+def build_agenda(data, hoje):
+    meta = data["meta"]
+    prazo = parse_date(meta.get("prazo_resultados"))
     contatos = index_by_id(data["contatos"])
     exames = index_by_id(data["exames"])
     itens = []
@@ -414,9 +659,26 @@ def build_agenda(data):
             valor_txt = brl(valor)
             if any(e.get("pacote") for e in vinculados):
                 valor_txt += " (no pacote)"
+        previstos = []
+        for e in vinculados:
+            previsto, fonte, _ = expected_result(e, d, meta)
+            if previsto:
+                previstos.append((previsto, fonte, earliest_result(e, d, meta) or previsto))
+        if previstos:
+            ultimo, fonte, _ = max(previstos)
+            # Todos os resultados prontos: o maior entre os mínimos de cada exame.
+            minimo = max(m for _, _, m in previstos)
+            resultado_txt = result_label(ultimo, fonte, None, minimo)
+        else:
+            ultimo = minimo = None
+            resultado_txt = "A confirmar"
         itens.append({
             "id": ag["id"],
             "data": d,
+            "exame_ids": [e["id"] for e in vinculados],
+            "Resultado previsto": resultado_txt,
+            "_resultado_atrasado": bool(minimo and prazo and minimo > prazo),
+            "_resultado_risco": bool(ultimo and prazo and minimo and minimo <= prazo < ultimo),
             "dt": datetime.combine(d, t) if d else None,
             "Data": fmt_date(d),
             "Horário": fmt_hora(ag.get("horario")),
@@ -427,10 +689,12 @@ def build_agenda(data):
             "Endereço": ag.get("endereco") or "A confirmar",
             "Valor": valor_txt,
             "Status": agenda_status(vinculados),
+            "Previsto": bool(ag.get("previsto")),
             "Orientações": ag.get("orientacoes", []),
             "Documentos": ag.get("documentos", []),
             "Exames": [e.get("nome", "") for e in vinculados],
         })
+    itens.extend(walk_in_items(data, hoje, contatos))
     itens.sort(key=lambda x: x["dt"] or datetime.max)
     return itens
 
@@ -457,6 +721,7 @@ def financial_lines(data):
         linhas.append({
             "Descrição": pac["nome"],
             "Origem": "Pacote",
+            "contato": pac.get("contato"),
             "Grupos": ", ".join(sorted({e.get("grupo", "") for e in ativos})),
             "Itens": ", ".join(e.get("nome", "") for e in ativos),
             "valor": pac.get("valor"),
@@ -475,6 +740,7 @@ def financial_lines(data):
         linhas.append({
             "Descrição": ex.get("nome", ""),
             "Origem": "Exame",
+            "contato": ex.get("contato"),
             "Grupos": ex.get("grupo", ""),
             "Itens": "",
             "valor": ex.get("valor"),
@@ -502,6 +768,79 @@ def financial_summary(linhas):
     # Conferência interna: as partes precisam fechar com o total.
     resumo["consistente"] = abs(resumo["confirmado"] + resumo["orcamento"] + resumo["estimado"] - resumo["total"]) < 0.005
     return resumo
+
+
+def totals_by_provider(data):
+    """Total por clínica/laboratório, com as mesmas regras do total geral (sem dupla contagem)."""
+    contatos = index_by_id(data["contatos"])
+    totais = {}
+    for linha in financial_lines(data):
+        if linha["tipo"] in ("sus", "nao_exigido"):
+            continue
+        contato = contatos.get(linha["contato"])
+        nome = contact_label(contato) if contato else f'{linha["Grupos"] or "Prestador"} (a definir)'
+        t = totais.setdefault(nome, {
+            "confirmado": 0.0, "orcamento": 0.0, "estimado": 0.0, "opcao": 0.0,
+            "a_cotar": 0, "pago": 0.0, "itens": [],
+        })
+        valor = linha["valor"] or 0
+        if linha["tipo"] in t and linha["tipo"] != "a_cotar":
+            t[linha["tipo"]] += valor
+        if linha["tipo"] == "a_cotar":
+            t["a_cotar"] += 1
+        if linha["pago"] and linha["tipo"] in VALOR_TIPOS_NO_TOTAL:
+            t["pago"] += valor
+        t["itens"].append(linha["Descrição"])
+    for t in totais.values():
+        t["total"] = t["confirmado"] + t["orcamento"] + t["estimado"]
+    return dict(sorted(totais.items(), key=lambda kv: -kv[1]["total"]))
+
+
+def installment(valor, parcelas, juros_mes):
+    """Valor da parcela (tabela Price). Sem juros, divide igualmente."""
+    if parcelas <= 1:
+        return valor
+    if not juros_mes:
+        return valor / parcelas
+    i = juros_mes / 100
+    return valor * i / (1 - (1 + i) ** -parcelas)
+
+
+def payment_plan(data, parcelas_por_contato, juros_mes):
+    """Separa o que será pago à vista (líquido) do que será parcelado, por prestador."""
+    contatos_por_nome = {contact_label(c): c for c in data["contatos"]}
+    linhas = []
+    for nome, t in totals_by_provider(data).items():
+        a_pagar = round(t["total"] - t["pago"], 2)
+        if a_pagar <= 0:
+            continue
+        contato = contatos_por_nome.get(nome, {})
+        n = parcelas_por_contato.get(contato.get("id"), 1)
+        parcela = installment(a_pagar, n, juros_mes) if n > 1 else a_pagar
+        linhas.append({
+            "nome": nome,
+            "a_pagar": a_pagar,
+            "parcelas": n,
+            "parcela": parcela,
+            "total_pago": parcela * n,
+            "forma": contato.get("forma_pagamento", ""),
+        })
+    return linhas
+
+
+def provider_kpis(totais):
+    itens = []
+    for nome, t in totais.items():
+        if t["total"]:
+            partes = [f"{VALOR_TIPOS[k].lower()} {brl(t[k])}" for k in ("confirmado", "orcamento", "estimado") if t[k]]
+            sub = " + ".join(partes) if len(partes) > 1 else VALOR_TIPOS[next(k for k in ("confirmado", "orcamento", "estimado") if t[k])]
+            cor = "green" if t["confirmado"] == t["total"] else "amber" if t["estimado"] == 0 else "gray"
+            itens.append((nome, brl(t["total"]), sub, cor))
+        elif t["opcao"]:
+            itens.append((nome, brl(t["opcao"]), "opção, fora do total", "gray"))
+        else:
+            itens.append((nome, "A cotar", f'{t["a_cotar"]} item(ns) sem valor', "red"))
+    return itens
 
 
 def values_by_group(data):
@@ -550,6 +889,10 @@ def validate_data(data):
         if not parse_date(meta.get(campo)):
             erros.append(f"Data inválida em meta.{campo}: {meta.get(campo)!r}.")
 
+    for feriado in meta.get("feriados", []):
+        if not parse_date(feriado):
+            erros.append(f"Feriado inválido em meta.feriados: {feriado!r}.")
+
     for colecao in ("contatos", "pacotes", "agenda", "exames"):
         ids = [i.get("id") for i in data[colecao]]
         repetidos = {i for i in ids if ids.count(i) > 1}
@@ -586,8 +929,18 @@ def validate_data(data):
             avisos.append(f"Exame {nome}: tipo de valor '{ex['valor_tipo']}' sem valor informado.")
         if ex.get("contato") and ex["contato"] not in contatos:
             erros.append(f"Exame {nome}: contato '{ex['contato']}' não existe.")
+        for cid in ex.get("opcoes_contato", []):
+            if cid not in contatos:
+                erros.append(f"Exame {nome}: opção de contato '{cid}' não existe.")
         if ex.get("pacote") and ex["pacote"] not in pacotes:
             erros.append(f"Exame {nome}: pacote '{ex['pacote']}' não existe.")
+        dias_uteis = ex.get("prazo_dias_uteis")
+        if dias_uteis is not None and (not isinstance(dias_uteis, int) or dias_uteis < 0):
+            erros.append(f"Exame {nome}: prazo_dias_uteis inválido {dias_uteis!r}.")
+        dias_min = ex.get("prazo_dias_uteis_min")
+        if dias_min is not None and (not isinstance(dias_min, int) or dias_min < 0
+                                     or (isinstance(dias_uteis, int) and dias_min > dias_uteis)):
+            erros.append(f"Exame {nome}: prazo_dias_uteis_min inválido {dias_min!r}.")
         for campo in ("prazo_resultado", "data_realizacao", "data_resultado"):
             if ex.get(campo) and not parse_date(ex[campo]):
                 erros.append(f"Exame {nome}: data inválida em {campo}: {ex[campo]!r}.")
@@ -664,6 +1017,7 @@ h1 {font-size:1.7rem !important;}
 .cal .c.apres {background:#dbeafe;border-color:#93c5fd;}
 .cal .n {font-weight:700;color:#0f172a;}
 .cal .e {display:block;background:#dcfce7;color:#166534;border-radius:4px;padding:1px 3px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cal .e.prev {background:#fef3c7;color:#92400e;border:1px dashed #d97706;}
 .cal .m {display:block;font-weight:700;margin-top:2px;}
 .cal .m .sm {display:none;}
 .legend {font-size:.78rem;color:#475569;margin-bottom:1rem;}
@@ -702,12 +1056,20 @@ def kpi_grid(itens):
 def event_card_html(item, hoje, mostrar_detalhes=True):
     partes = [
         f'<div class="ev"><div class="hr">{esc(item["Horário"])}</div><div class="bd">',
-        f'<span class="tt">{esc(item["Tipo de exame"])}</span>{badge_html(item["Status"])}',
+        f'<span class="tt">{esc(item["Tipo de exame"])}</span>{badge_html(item["Status"])}'
+        + (" " + badge_html("Horário previsto", AMARELO) if item.get("Previsto") else ""),
         f'<div class="mt">📍 {esc(item["Clínica / profissional"])} · {esc(item["Endereço"])}</div>',
         f'<div class="mt">💰 {esc(item["Valor"])}</div>',
+        '<div class="mt"'
+        + (' style="color:#b91c1c;font-weight:700"' if item["_resultado_atrasado"]
+           else ' style="color:#b45309;font-weight:700"' if item.get("_resultado_risco") else "")
+        + f'>📄 Resultado previsto: {esc(item["Resultado previsto"])}'
+        + (" — após o prazo interno" if item["_resultado_atrasado"]
+           else " — no pior caso, após o prazo interno" if item.get("_resultado_risco") else "")
+        + "</div>",
     ]
     if item["data"] and item["data"] < hoje and item["Status"] not in STATUS_CONCLUIDOS:
-        partes.append('<div class="mt" style="color:#b91c1c">Data passou: atualize o status em Configurações.</div>')
+        partes.append('<div class="mt" style="color:#b91c1c">Data passou: se já foi feito, toque em “Exame realizado”.</div>')
     if mostrar_detalhes:
         if len(item["Exames"]) > 1:
             partes.append(f'<div class="sec">Exames</div><div class="mt">{esc(", ".join(item["Exames"]))}</div>')
@@ -725,7 +1087,7 @@ def cal_mark(texto, curto, cor):
     return f'<span class="m" style="color:{cor}"><span class="lg">{texto}</span><span class="sm">{curto}</span></span>'
 
 
-def calendar_html(itens, meta, hoje):
+def calendar_html(itens, meta, hoje, a_marcar=0):
     prazo = parse_date(meta.get("prazo_resultados"))
     conf = parse_date(meta.get("conferencia"))
     apres = parse_date(meta.get("apresentacao"))
@@ -748,6 +1110,8 @@ def calendar_html(itens, meta, hoje):
             classes.append("out")
         if d == hoje:
             classes.append("today")
+            if a_marcar:
+                marcas.append(cal_mark(f"A marcar: {a_marcar}", f"⚠ {a_marcar}", "#b91c1c"))
         if d == prazo:
             classes.append("prazo")
             marcas.append(cal_mark("Prazo", "Prazo", "#991b1b"))
@@ -758,7 +1122,7 @@ def calendar_html(itens, meta, hoje):
             classes.append("apres")
             marcas.append(cal_mark("Apresentação", "Apres.", "#1e40af"))
         eventos = "".join(
-            f'<span class="e" title="{esc(e["Tipo de exame"])}">{esc(e["Horário"])}'
+            f'<span class="e{" prev" if e.get("Previsto") else ""}" title="{esc(e["Tipo de exame"])}">{esc(e["Horário"])}'
             f'<span class="t"> {esc(e["Tipo de exame"])}</span></span>'
             for e in por_dia.get(d, [])
         )
@@ -766,19 +1130,10 @@ def calendar_html(itens, meta, hoje):
         d += timedelta(days=1)
 
     legenda = (
-        '<div class="legend"><span>🟩 compromisso</span><span>🟥 prazo dos resultados</span>'
+        '<div class="legend"><span>🟩 compromisso</span><span>🟨 horário previsto (ordem de chegada)</span><span>🟥 prazo dos resultados</span>'
         '<span>🟨 conferência</span><span>🟦 apresentação</span><span>🔲 hoje (contorno azul)</span></div>'
     )
     return f'<div class="cal">{"".join(cells)}</div>{legenda}'
-
-
-def render_iframe(url, height):
-    if hasattr(st, "iframe"):
-        st.iframe(url, height=height)
-    else:  # Streamlit anterior a st.iframe
-        import streamlit.components.v1 as components
-
-        components.iframe(url, height=height, scrolling=True)
 
 
 def multiselect_filter(df, coluna, rotulo, key, container=st):
@@ -824,7 +1179,7 @@ def tab_overview(data, rows, agenda, hoje):
     dias = (prazo - hoje).days
 
     ativos = [r for r in rows if r["Status"] not in STATUS_IGNORADOS]
-    agendados = sum(1 for r in ativos if r["Status"] == "Agendado")
+    agendados = sum(1 for r in ativos if r["Status"] in ("Agendado", "Fechado"))
     pendentes = sum(1 for r in ativos if r["Status"] in STATUS_PRE_AGENDAMENTO)
     recebidos = sum(1 for r in ativos if r["Status"] == "Resultado recebido")
     risco = sum(1 for r in ativos if r["Risco"] in ("Crítico", "Alto"))
@@ -834,7 +1189,7 @@ def tab_overview(data, rows, agenda, hoje):
         ("Conferência", meta.get("conferencia", "—"), "", "amber"),
         ("Data de apresentação", meta["apresentacao"], "", "blue"),
         ("Subtotal conhecido", brl(resumo["total"]), f'{resumo["a_cotar"]} item(ns) a cotar', "gray"),
-        ("Exames agendados", agendados, f"de {len(ativos)} exigidos", "green"),
+        ("Exames agendados", agendados, f"de {len(ativos)} (inclui ordem de chegada)", "green"),
         ("Exames pendentes", pendentes, "sem agendamento", "amber"),
         ("Resultados recebidos", recebidos, f"de {len(ativos)}", "green"),
         ("Risco de atraso", risco, "crítico ou alto", "red"),
@@ -859,14 +1214,16 @@ def tab_overview(data, rows, agenda, hoje):
         criticos = [r for r in ativos if r["Risco"] == "Crítico"]
         altos = [r for r in ativos if r["Risco"] == "Alto"]
         atencao = [r for r in ativos if r["Risco"] == "Atenção"]
-        for r in criticos:
-            st.error(f'**{r["Exame"]}** — {r["Motivo do risco"]}')
-        grupos = {}
-        for r in altos:
-            grupos.setdefault(r["Grupo"], []).append(r["Exame"])
-        for grupo, nomes in grupos.items():
-            lista = ", ".join(nomes) if len(nomes) <= 4 else f"{len(nomes)} exames"
-            st.warning(f"**{grupo}** — ainda não agendado ({lista}). Faltam {dias} dias.")
+        for alerta, lista_risco in ((st.error, criticos), (st.warning, altos)):
+            grupos = {}
+            for r in lista_risco:
+                grupos.setdefault((r["Grupo"], r["Motivo do risco"]), []).append(r["Exame"])
+            for (grupo, motivo), nomes in grupos.items():
+                if len(nomes) == 1:
+                    alerta(f"**{nomes[0]}** — {motivo}.")
+                else:
+                    lista = ", ".join(nomes) if len(nomes) <= 4 else f"{len(nomes)} exames"
+                    alerta(f"**{grupo}** — {motivo} ({lista}).")
         if atencao:
             with st.expander(f"ℹ️ {len(atencao)} exame(s) com prazo do resultado a confirmar"):
                 for r in atencao:
@@ -881,11 +1238,80 @@ def tab_overview(data, rows, agenda, hoje):
             ("Estimado", brl(resumo["estimado"]), "", "gray"),
             ("Pago", brl(resumo["pago"]), f'falta {brl(resumo["nao_pago"])}', "blue"),
         ])
+        st.markdown("**Por clínica / laboratório**")
+        kpi_grid(provider_kpis(totals_by_provider(data)))
         st.caption("SUS, descartados e não exigidos não entram no total. Pacotes entram uma vez só.")
 
 
 def tab_agenda(data, agenda, hoje):
     st.subheader("📅 Agenda")
+    for msg in st.session_state.pop("flash_agenda", []):
+        st.success(msg)
+    render_agenda_body(data, agenda, hoje)
+    st.divider()
+    render_pending(data, hoje)
+
+
+def _update_exams(ids, acao, dia):
+    """Callback dos botões da agenda: realizado, resultado recebido ou desfazer."""
+    data = st.session_state.data
+    alterados = []
+    for e in data["exames"]:
+        if e["id"] not in ids or e.get("status") in STATUS_IGNORADOS:
+            continue
+        if acao == "realizado" and e.get("status") not in STATUS_CONCLUIDOS:
+            e["status_anterior"] = e.get("status")
+            e["status"] = "Realizado"
+            e["data_realizacao"] = e.get("data_realizacao") or dia
+        elif acao == "resultado" and e.get("status") == "Realizado":
+            e["status"] = "Resultado recebido"
+            e["data_resultado"] = dia
+        elif acao == "desfazer" and e.get("status") == "Resultado recebido":
+            e["status"] = "Realizado"
+            e["data_resultado"] = None
+        elif acao == "desfazer" and e.get("status") == "Realizado":
+            e["status"] = e.pop("status_anterior", None) or "Agendado"
+            e["data_realizacao"] = None
+        else:
+            continue
+        alterados.append(e.get("nome", e["id"]))
+    if not alterados:
+        return
+    rotulo = {"realizado": "marcado como realizado", "resultado": "com resultado recebido",
+              "desfazer": "voltou ao status anterior"}[acao]
+    lista = ", ".join(alterados) if len(alterados) <= 3 else f"{len(alterados)} exames"
+    ok, msg = save_data_file(data)
+    st.session_state.dirty = not ok
+    st.session_state.flash_agenda = [f"{lista}: {rotulo}.", msg + " " + AVISO_ARMAZENAMENTO if ok else msg]
+
+
+def render_card_actions(item, hoje):
+    ids = item.get("exame_ids") or []
+    if not ids:
+        return
+    status = item["Status"]
+    futuro = bool(item["data"] and item["data"] > hoje)
+    dia_realizacao = fmt_date(min(item["data"], hoje) if item["data"] else hoje)
+    c1, c2, c3 = st.columns(3)
+    if status not in STATUS_CONCLUIDOS:
+        c1.button(
+            "✅ Exame realizado", key=f"ag_fim_{item['id']}", width="stretch", disabled=futuro,
+            on_click=_update_exams, args=(ids, "realizado", dia_realizacao),
+            help="Disponível a partir do dia do exame." if futuro else "Marca os exames deste compromisso como realizados.",
+        )
+    if status == "Realizado":
+        c2.button(
+            "📄 Resultado recebido", key=f"ag_res_{item['id']}", width="stretch",
+            on_click=_update_exams, args=(ids, "resultado", fmt_date(hoje)),
+        )
+    if status in STATUS_CONCLUIDOS:
+        c3.button(
+            "↩️ Desfazer", key=f"ag_desf_{item['id']}", width="stretch",
+            on_click=_update_exams, args=(ids, "desfazer", fmt_date(hoje)),
+        )
+
+
+def render_agenda_body(data, agenda, hoje):
     if not agenda:
         st.info("Nenhum compromisso cadastrado.")
         return
@@ -900,7 +1326,8 @@ def tab_agenda(data, agenda, hoje):
         df = multiselect_filter(df, "Tipo de exame", "Tipo de exame", "ag_f_tipo", c4)
     filtrados = [i for i in agenda if i["id"] in set(df["id"])]
 
-    st.markdown(calendar_html(filtrados, data["meta"], hoje), unsafe_allow_html=True)
+    st.markdown("#### Calendário")
+    st.markdown(calendar_html(filtrados, data["meta"], hoje, len(pending_to_schedule(data, hoje))), unsafe_allow_html=True)
 
     if not filtrados:
         st.info("Nenhum compromisso com esses filtros.")
@@ -908,18 +1335,19 @@ def tab_agenda(data, agenda, hoje):
 
     prazo = parse_date(data["meta"]["prazo_resultados"])
     dia_atual = None
-    blocos = []
     for i in filtrados:
         if i["data"] != dia_atual:
             dia_atual = i["data"]
             extra = '<span class="late">após o prazo interno</span>' if prazo and dia_atual and dia_atual > prazo else ""
             rotulo = fmt_dia_semana(dia_atual) if dia_atual else "Sem data"
-            blocos.append(f'<div class="day">{esc(rotulo)}{extra}</div>')
-        blocos.append(event_card_html(i, hoje))
-    st.markdown("".join(blocos), unsafe_allow_html=True)
+            st.markdown(f'<div class="day">{esc(rotulo)}{extra}</div>', unsafe_allow_html=True)
+        st.markdown(event_card_html(i, hoje), unsafe_allow_html=True)
+        render_card_actions(i, hoje)
 
     with st.expander("Ver agenda em tabela"):
-        tabela = df.drop(columns=["id", "data", "dt", "Clínica", "Exames"]).copy()
+        tabela = df.drop(columns=["id", "data", "dt", "Clínica", "Exames", "exame_ids",
+                                  "_resultado_atrasado", "_resultado_risco"]).copy()
+        tabela["Previsto"] = tabela["Previsto"].map({True: "Sim", False: ""})
         tabela["Orientações"] = tabela["Orientações"].map("; ".join)
         tabela["Documentos"] = tabela["Documentos"].map(lambda d: "; ".join(d) or "Não informados")
         st.dataframe(style_cells(tabela, ["Status"]), hide_index=True, width="stretch")
@@ -946,7 +1374,7 @@ def tab_exams(data, rows):
         "Ordem", "Grupo", "Exame", "Exigência do edital", "Clínica / profissional", "Valor",
         "Data agendada", "Prazo do resultado", "Status", "Risco", "Pendências", "Observações",
         "Motivo do risco", "Tipo de valor", "Pago", "Protocolo", "Código de acompanhamento",
-        "Realizado em", "Resultado em",
+        "Realizado em", "Resultado em", "Válido a partir de",
     ]
     st.dataframe(
         style_cells(df[colunas], ["Status", "Risco"]),
@@ -967,8 +1395,9 @@ def tab_exams(data, rows):
 
     st.subheader("🏥 SUS × particular")
     todos = pd.DataFrame(rows)
-    sus = todos[todos["Status"] == "SUS"]
-    particulares = todos[~todos["Status"].isin(STATUS_FORA_DO_TOTAL)]
+    eh_sus = (todos["Status"] == "SUS") | (todos["Tipo de valor"] == VALOR_TIPOS["sus"])
+    sus = todos[eh_sus]
+    particulares = todos[~eh_sus & ~todos["Status"].isin(STATUS_IGNORADOS)]
     fora = todos[todos["Status"].isin(STATUS_IGNORADOS)]
     s1, s2 = st.columns(2)
     with s1:
@@ -1000,6 +1429,33 @@ def tab_finance(data):
         ("Itens a cotar", resumo["a_cotar"], "sem valor", "amber"),
         ("Opções fora do total", brl(resumo["opcoes"]), "somam se escolhidas", "gray"),
     ])
+
+    st.markdown("#### Quanto vai ficar em cada clínica / laboratório")
+    totais = totals_by_provider(data)
+    kpi_grid(provider_kpis(totais))
+    pdf = pd.DataFrame([
+        {
+            "Clínica / laboratório": nome,
+            "Total": brl(t["total"]) if t["total"] else ("—" if t["opcao"] else "A cotar"),
+            "Confirmado": brl(t["confirmado"]),
+            "Orçamento": brl(t["orcamento"]),
+            "Estimado": brl(t["estimado"]),
+            "Opções fora do total": brl(t["opcao"]),
+            "Itens a cotar": t["a_cotar"],
+            "Pago": brl(t["pago"]),
+            "A pagar": brl(t["total"] - t["pago"]),
+            "O que inclui": "; ".join(t["itens"]),
+        }
+        for nome, t in totais.items()
+    ])
+    st.dataframe(pdf, hide_index=True, width="stretch")
+    soma_prestadores = round(sum(t["total"] for t in totais.values()), 2)
+    if abs(soma_prestadores - resumo["total"]) > 0.005:
+        st.error(f"A soma por prestador ({brl(soma_prestadores)}) não confere com o total geral ({brl(resumo['total'])}).")
+    else:
+        st.caption(f"Soma por prestador confere com o total geral: {brl(soma_prestadores)}. Exames do SUS não aparecem (custo zero).")
+
+    render_payment_simulator(data, resumo)
 
     st.markdown("#### Composição do total (sem dupla contagem)")
     tabela = pd.DataFrame([
@@ -1080,6 +1536,54 @@ def tab_finance(data):
         st.warning("  \n".join(msg))
 
 
+def render_payment_simulator(data, resumo):
+    st.markdown("#### 💳 À vista (líquido) × parcelado")
+    teto = data["meta"].get("orcamento_teto")
+    if teto:
+        folga = teto - resumo["total"]
+        st.caption(
+            f"Teto planejado: {brl(teto)} · total atual: {brl(resumo['total'])} · "
+            + (f"folga de {brl(folga)}" if folga >= 0 else f"acima do teto em {brl(-folga)}")
+        )
+
+    parcelaveis = [c for c in data["contatos"] if c.get("parcelas_max")]
+    parcelas_por_contato = {}
+    cols = st.columns(len(parcelaveis) + 1) if parcelaveis else [st]
+    for col, c in zip(cols, parcelaveis):
+        parcelas_por_contato[c["id"]] = col.number_input(
+            f"Parcelas — {c['nome']}", min_value=1, max_value=int(c["parcelas_max"]),
+            value=int(c.get("parcelas", 1)), step=1, key=f"parc_{c['id']}",
+        )
+    juros = cols[-1].number_input(
+        "Juros do parcelamento (% ao mês)", min_value=0.0, max_value=20.0, value=0.0, step=0.1,
+        format="%.2f", key="parc_juros", help="Deixe 0 se a clínica parcelar sem juros.",
+    )
+
+    plano = payment_plan(data, parcelas_por_contato, juros)
+    liquido = sum(l["a_pagar"] for l in plano if l["parcelas"] == 1)
+    parcelado = [l for l in plano if l["parcelas"] > 1]
+    mensal = sum(l["parcela"] for l in parcelado)
+    custo_final = liquido + sum(l["total_pago"] for l in parcelado)
+    kpi_grid([
+        ("Precisa à vista (líquido)", brl(liquido), "dinheiro, Pix ou débito", "green"),
+        ("Parcelado", brl(sum(l["a_pagar"] for l in parcelado)),
+         " + ".join(f'{l["parcelas"]}× {brl(l["parcela"])}' for l in parcelado) or "nada parcelado", "blue"),
+        ("Parcela mensal", brl(mensal), "no cartão", "amber"),
+        ("Custo final", brl(custo_final), "com juros" if juros else "sem juros", "gray"),
+    ])
+    st.dataframe(pd.DataFrame([
+        {
+            "Clínica / laboratório": l["nome"],
+            "A pagar": brl(l["a_pagar"]),
+            "Forma": "À vista" if l["parcelas"] == 1 else f'{l["parcelas"]}× de {brl(l["parcela"])}',
+            "Total com juros": brl(l["total_pago"]),
+            "Condição informada": l["forma"],
+        }
+        for l in plano
+    ]), hide_index=True, width="stretch")
+    st.caption("Parcelas são simulação: confirme com cada clínica se aceita cartão, o número de parcelas e se há juros.")
+
+
 def tab_contacts(data):
     st.subheader("📱 Contatos")
     contatos = data["contatos"]
@@ -1129,98 +1633,21 @@ def tab_contacts(data):
         )
 
 
-def _select_link():
-    nome = st.session_state.get("link_sel")
-    for link in st.session_state.data.get("links", []):
-        if link["nome"] == nome and link.get("url"):
-            st.session_state.iframe_url = link["url"]
-
-
-def _open_link(url):
-    st.session_state.iframe_url = url
-
-
-def tab_iframe(data):
-    st.subheader("🌐 Painel digital")
-    for msg in st.session_state.pop("flash_link", []):
-        st.success(msg)
-    links = data.setdefault("links", [])
-    validos = [l for l in links if l.get("url")]
-
-    if validos:
-        st.selectbox(
-            "Atalhos salvos",
-            [l["nome"] for l in validos],
-            index=None,
-            placeholder="Selecione um link salvo",
-            key="link_sel",
-            on_change=_select_link,
-        )
-    url = normalize_url(st.text_input("URL", key="iframe_url", placeholder="https://..."))
-    altura = st.slider("Altura do quadro (px)", 300, 1600, 700, 50)
-
-    if url and not is_valid_url(url):
-        st.error("URL inválida. Use um endereço como https://exemplo.com.br")
-    elif url:
-        c1, c2 = st.columns(2)
-        c1.link_button("↗️ Abrir em nova guia", url, width="stretch")
-        c2.caption(url)
-        st.info(
-            "Alguns sites (como GitHub, gov.br e bancos) bloqueiam a exibição em IFRAME por "
-            "X-Frame-Options ou Content-Security-Policy. Se o quadro ficar em branco ou mostrar erro, "
-            "use “Abrir em nova guia”."
-        )
-        render_iframe(url, altura)
-    else:
-        st.caption("Digite uma URL ou escolha um atalho para abrir aqui dentro.")
-
-    st.markdown("#### Atalhos")
-    cols = st.columns(3)
-    for n, link in enumerate(links):
-        with cols[n % 3].container(border=True):
-            st.markdown(f'**{link["nome"]}**  \n<span style="color:#64748b;font-size:.8rem">{esc(link.get("categoria", ""))}</span>', unsafe_allow_html=True)
-            if link.get("url"):
-                a, b = st.columns(2)
-                a.button("Abrir aqui", key=f"lk_open_{n}", on_click=_open_link, args=(link["url"],), width="stretch")
-                b.link_button("Nova guia", link["url"], width="stretch")
+def tab_edital(data):
+    st.subheader("📄 Edital PDF")
+    documentos = data.get("documentos", [])
+    if not documentos:
+        st.info("Nenhum documento cadastrado em data.json.")
+    for doc in documentos:
+        st.markdown(f"#### {doc['nome']}")
+        if doc.get("descricao"):
+            st.caption(doc["descricao"])
+        for n, img in enumerate(doc.get("imagens", []), 1):
+            caminho = BASE_DIR / img
+            if caminho.is_file():
+                st.image(str(caminho), caption=f"Página {n}", width="stretch")
             else:
-                st.caption("URL não cadastrada — informe abaixo.")
-
-    st.markdown("#### Salvar ou atualizar link")
-    with st.form("form_link", clear_on_submit=True):
-        nomes = [l["nome"] for l in links]
-        c1, c2 = st.columns(2)
-        existente = c1.selectbox("Atualizar link existente", ["(novo link)"] + nomes)
-        nome_novo = c2.text_input("Nome do novo link")
-        c3, c4 = st.columns([2, 1])
-        nova_url = c3.text_input("URL do link")
-        categoria = c4.text_input("Categoria", value="Outros")
-        gravar = st.checkbox("Gravar também no data.json")
-        if st.form_submit_button("Salvar link", type="primary"):
-            nova_url = normalize_url(nova_url)
-            nome = nome_novo.strip() if existente == "(novo link)" else existente
-            if not nome:
-                st.error("Informe o nome do link.")
-            elif not is_valid_url(nova_url):
-                st.error("URL inválida.")
-            else:
-                alvo = next((l for l in links if l["nome"] == nome), None)
-                if alvo:
-                    alvo["url"] = nova_url
-                    if categoria.strip() and existente == "(novo link)":
-                        alvo["categoria"] = categoria.strip()
-                else:
-                    links.append({"nome": nome, "categoria": categoria.strip() or "Outros", "url": nova_url})
-                mensagens = [f"Link “{nome}” salvo nesta sessão."]
-                if gravar:
-                    ok, msg = save_data_file(data)
-                    if not ok:
-                        st.error(msg)
-                        st.stop()
-                    mensagens.append(msg + " " + AVISO_ARMAZENAMENTO)
-                st.session_state.dirty = not gravar
-                st.session_state.flash_link = mensagens
-                st.rerun()
+                st.warning(f"Imagem não encontrada: {img}")
 
 
 def _date_or_none(value):
@@ -1251,7 +1678,15 @@ def tab_settings(data):
         c3, c4, c5 = st.columns(3)
         realizacao = c3.date_input("Data de realização", value=parse_date(ex.get("data_realizacao")), format="DD/MM/YYYY")
         resultado = c4.date_input("Data do resultado", value=parse_date(ex.get("data_resultado")), format="DD/MM/YYYY")
-        prazo_res = c5.date_input("Prazo do resultado", value=parse_date(ex.get("prazo_resultado")), format="DD/MM/YYYY")
+        prazo_res = c5.date_input("Prazo do resultado (data informada)", value=parse_date(ex.get("prazo_resultado")), format="DD/MM/YYYY")
+        dias_uteis = c5.number_input(
+            "Prazo em dias úteis (média)", value=ex.get("prazo_dias_uteis"), min_value=0, step=1,
+            placeholder="Não informado", help="Usado para prever o resultado quando não há data informada.",
+        )
+        dias_uteis_min = c5.number_input(
+            "Prazo mínimo em dias úteis", value=ex.get("prazo_dias_uteis_min"), min_value=0, step=1,
+            placeholder="Não informado", help="Preencha quando o laboratório informar uma faixa (ex.: 5 a 10 dias úteis).",
+        )
         c6, c7 = st.columns(2)
         valor = c6.number_input(
             "Valor (R$)", value=float(ex["valor"]) if ex.get("valor") is not None else None,
@@ -1274,6 +1709,8 @@ def tab_settings(data):
                 "data_realizacao": _date_or_none(realizacao),
                 "data_resultado": _date_or_none(resultado),
                 "prazo_resultado": _date_or_none(prazo_res),
+                "prazo_dias_uteis": int(dias_uteis) if dias_uteis is not None else None,
+                "prazo_dias_uteis_min": int(dias_uteis_min) if dias_uteis_min is not None else None,
                 "valor": (int(valor) if float(valor).is_integer() else round(valor, 2)) if valor is not None else None,
                 "pago": pago,
                 "protocolo": protocolo.strip(),
@@ -1399,7 +1836,7 @@ def main():
         st.stop()
 
     rows = build_exam_rows(data, hoje)
-    agenda = build_agenda(data)
+    agenda = build_agenda(data, hoje)
 
     with st.sidebar:
         st.markdown(f'**{data["meta"]["candidata"]}**')
@@ -1409,7 +1846,7 @@ def main():
         st.download_button("⬇️ Exportar JSON", data_to_json(data).encode("utf-8"), file_name="data.json",
                            mime="application/json", width="stretch", key="sb_export")
 
-    abas = st.tabs(["Visão geral", "Agenda", "Exames", "Financeiro", "Contatos", "Painel digital", "Configurações"])
+    abas = st.tabs(["Visão geral", "Agenda", "Exames", "Financeiro", "Contatos", "Edital PDF", "Configurações"])
     with abas[0]:
         tab_overview(data, rows, agenda, hoje)
     with abas[1]:
@@ -1421,7 +1858,7 @@ def main():
     with abas[4]:
         tab_contacts(data)
     with abas[5]:
-        tab_iframe(data)
+        tab_edital(data)
     with abas[6]:
         tab_settings(data)
 

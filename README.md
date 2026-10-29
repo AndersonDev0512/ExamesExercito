@@ -1,6 +1,6 @@
 # Exames Exército
 
-Painel em Streamlit para acompanhar os exames exigidos pelo edital da inspeção de saúde militar: agenda, status, prazos, riscos de atraso, valores, contatos e links úteis. Tema claro e layout pensado para uso no celular.
+Painel em Streamlit para acompanhar os exames exigidos pelo edital da inspeção de saúde militar: agenda, status, prazos, riscos de atraso, valores, contatos e o anexo de exames do edital. Tema claro e layout pensado para uso no celular.
 
 ## Estrutura
 
@@ -10,6 +10,7 @@ ExamesExercito/
 │   └── config.toml      # tema claro e configurações do servidor
 ├── .gitignore
 ├── app.py               # interface e funções reutilizáveis
+├── static/              # páginas do Anexo C do edital (imagens)
 ├── data.json            # todos os dados do painel
 ├── README.md
 └── requirements.txt
@@ -24,13 +25,13 @@ ExamesExercito/
 | **Exames** | Tabela com status e risco coloridos, pesquisa em todas as colunas (sem diferenciar acentos), filtros por status e grupo, e a separação entre SUS e particular |
 | **Financeiro** | Total geral, confirmado, orçamentos, estimado, pago, não pago, valor por exame e por grupo, comparativo entre clínicas e economia |
 | **Contatos** | Nome com os 4 últimos dígitos, telefone e botão de WhatsApp (`https://wa.me/55NUMERO`), somente para números cadastrados |
-| **Painel digital** | Abre uma URL dentro de um IFRAME, com altura ajustável, botão para nova guia e atalhos salvos |
+| **Edital PDF** | Páginas do Anexo C do edital (relação de exames, laudos e avaliações) em imagem, legíveis no celular |
 | **Configurações** | Atualiza status, datas, valor, pagamento, protocolo, código de acompanhamento e observações; adiciona compromissos; exporta e importa o JSON |
 
 ## Regras de cálculo
 
 - **Pacotes não são somados duas vezes.** Exames com `"pacote"` preenchido aparecem com o valor individual, mas o total usa só o valor do pacote. Exemplo: os R$ 1.260,00 da Ultramedical já incluem radiologia, ultrassom das mamas, ECG e colpocitológico.
-- **Ficam fora do total:** exames com status `SUS`, `Descartado` ou `Não exigido` (como o ultrassom das axilas).
+- **Ficam fora do total:** exames com status `SUS`, `Descartado` ou `Não exigido`.
 - **Tipos de valor (`valor_tipo`):**
   - `confirmado`, `orcamento` e `estimado` entram no total;
   - `opcao` (por exemplo, a panorâmica da FAODO) só entra quando escolhida;
@@ -39,6 +40,7 @@ ExamesExercito/
   - *Crítico:* resultado previsto ou compromisso marcado depois do prazo interno;
   - *Alto:* exame ainda não agendado faltando `dias_alerta` dias ou menos;
   - *Atenção:* prazo do resultado ainda não confirmado.
+- **Ordem de chegada:** exames com `"ordem_chegada": true` e sem compromisso na agenda aparecem na agenda no dia atual; o resultado previsto é hoje + `prazo_dias_uteis` (média), e o app mostra a data-limite para fazê-los.
 - **Validação dos dados:** o app confere datas, horários, status, referências entre contatos/pacotes/agenda, se o final do contato bate com o telefone, se a soma dos itens bate com o valor do pacote e se os subtotais fecham com o total. Erros e avisos aparecem no topo da página.
 
 ## Executar localmente (Windows / PowerShell)
@@ -81,14 +83,14 @@ Rodando localmente, o botão **Gravar no data.json** salva direto no arquivo.
 - `agenda`: `data` (dd/mm/aaaa), `horario` (HH:MM), `tipo`, `contato`, `profissional`, `endereco`, `valor`, `exames` (ids), `orientacoes`, `documentos`.
 - `exames`: `id`, `ordem`, `grupo`, `nome`, `exigencia`, `contato`, `valor`, `valor_tipo`, `pacote`, `prazo_resultado`, `status`, `pendencias`, `observacoes`, `pago`, `data_realizacao`, `data_resultado`, `protocolo`, `codigo_acompanhamento`.
 - `comparativos`: opções de preço por categoria, com a escolhida.
-- `links`: atalhos do Painel digital.
+- `documentos`: documentos exibidos na aba Edital PDF (`nome`, `descricao`, `imagens`).
 - `prioridades`: lista exibida na Visão geral.
 
-Status permitidos: Não iniciado, Em cotação, Aguardando resposta, Quase fechado, Escolhido, Agendado, Realizado, Resultado recebido, Descartado, SUS, Não exigido.
+Status permitidos: Não iniciado, Em cotação, Aguardando resposta, Quase fechado, Escolhido, Fechado, Agendado, Realizado, Resultado recebido, Descartado, SUS, Não exigido.
 
-## IFRAME
+## Edital PDF
 
-A aba **Painel digital** abre a URL digitada dentro do painel. Muitos sites (GitHub, gov.br, bancos, Google Drive fora do modo de incorporação) bloqueiam IFRAME por `X-Frame-Options` ou `Content-Security-Policy`. Nesse caso, o quadro fica em branco ou mostra erro: use **Abrir em nova guia**.
+As páginas do Anexo C ficam como imagens em `static/` e aparecem na aba **Edital PDF**. Para trocar ou acrescentar páginas, gere novas imagens (PNG) do PDF, coloque em `static/` e liste os caminhos em `documentos[].imagens` no `data.json`.
 
 ## Segurança
 
