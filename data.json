@@ -130,11 +130,12 @@
       "id": "meu_oftalmo",
       "categoria": "Oftalmologia",
       "nome": "Meu Oftalmo",
-      "final": "1246",
-      "telefone": "(67) 9985-1246",
+      "final": "2960",
+      "telefone": "(67) 9299-2960",
       "valor": 200,
-      "situacao": "Em cotação",
-      "observacoes": "Confirmar se o valor inclui todos os itens do edital e parecer com CRM."
+      "situacao": "Agendado",
+      "observacoes": "WhatsApp comercial confirmado em 29/10/2026. Número anterior cadastrado: (67) 9985-1246. Agendado com Dr. Magno em 03/11/2026 às 09h00 (ordem de chegada). Aberta até 17h.",
+      "telefone_confirmado": true
     },
     {
       "id": "ioms",
@@ -273,115 +274,6 @@
       "documentos": []
     },
     {
-      "id": "ag_colpo",
-      "data": "30/10/2026",
-      "horario": "07:55",
-      "tipo": "Preventivo / colpocitológico",
-      "contato": "ultramedical",
-      "profissional": "Dra. Helen",
-      "endereco": null,
-      "valor": 120,
-      "exames": [
-        "colpocitologico"
-      ],
-      "orientacoes": [
-        "Pelo menos 3 dias de abstinência sexual",
-        "Se houver uso de creme vaginal, aguardar 7 dias para fazer o exame",
-        "Não estar com sangramento menstrual",
-        "Caso exista bacterioscopia, comparecer preferencialmente sem higiene íntima",
-        "Chegar com 30 minutos de antecedência para cadastro"
-      ],
-      "documentos": [
-        "Documento pessoal com foto",
-        "Edital",
-        "Cartão PAX"
-      ]
-    },
-    {
-      "id": "ag_mamas",
-      "data": "30/10/2026",
-      "horario": "09:00",
-      "tipo": "Ultrassonografia das mamas",
-      "contato": "ultramedical",
-      "profissional": "Dra. Fabiana",
-      "endereco": null,
-      "valor": 200,
-      "exames": [
-        "us_mamas"
-      ],
-      "orientacoes": [
-        "Levar exames anteriores, se houver",
-        "Chegar com 30 minutos de antecedência para cadastro"
-      ],
-      "documentos": [
-        "Documento pessoal com foto",
-        "Edital",
-        "Cartão PAX"
-      ]
-    },
-    {
-      "id": "ag_sus",
-      "data": "03/11/2026",
-      "horario": "07:00",
-      "tipo": "Coleta de exames laboratoriais pelo SUS",
-      "contato": "usf_sao_francisco",
-      "profissional": "",
-      "endereco": null,
-      "valor": 0,
-      "exames": [
-        "sus_colesterol_total",
-        "sus_creatinina",
-        "sus_glicose",
-        "sus_hb_glicada",
-        "sus_potassio",
-        "sus_triglicerideos",
-        "sus_hemograma",
-        "sus_sodio",
-        "sus_tsh"
-      ],
-      "orientacoes": [
-        "Jejum",
-        "HDL, LDL e T4 Livre não serão feitos pelo SUS (particular na Ultramedical)"
-      ],
-      "documentos": []
-    },
-    {
-      "id": "ag_psico",
-      "data": "03/11/2026",
-      "horario": "14:00",
-      "tipo": "Avaliação psicológica para manuseio de arma",
-      "contato": "andrea_orlandini",
-      "profissional": "",
-      "endereco": null,
-      "valor": 250,
-      "exames": [
-        "psicologico"
-      ],
-      "orientacoes": [
-        "Laudo no mesmo dia"
-      ],
-      "documentos": []
-    },
-    {
-      "id": "ag_audio",
-      "data": "04/11/2026",
-      "horario": "09:45",
-      "tipo": "Audiometria tonal e vocal",
-      "contato": "audioclin",
-      "profissional": "Fonoaudióloga",
-      "endereco": null,
-      "valor": 120,
-      "exames": [
-        "audiometria"
-      ],
-      "orientacoes": [
-        "Laudo assinado pela fonoaudióloga e entregue na hora",
-        "Pedido médico não é necessário",
-        "Pagamento em dinheiro ou Pix"
-      ],
-      "documentos": []
-    },
-    {
       "id": "ag_ultra_sangue",
       "data": "30/10/2026",
       "horario": "06:30",
@@ -421,6 +313,53 @@
         "Horário previsto: ordem de chegada, segunda a sábado, das 6h às 10h30",
         "Jejum de 8 a 12 horas (ou conforme orientação médica)",
         "Fazer antes do cadastro do preventivo (07h25)"
+      ],
+      "documentos": [
+        "Documento pessoal com foto",
+        "Edital",
+        "Cartão PAX"
+      ]
+    },
+    {
+      "id": "ag_colpo",
+      "data": "30/10/2026",
+      "horario": "07:55",
+      "tipo": "Preventivo / colpocitológico",
+      "contato": "ultramedical",
+      "profissional": "Dra. Helen",
+      "endereco": null,
+      "valor": 120,
+      "exames": [
+        "colpocitologico"
+      ],
+      "orientacoes": [
+        "Pelo menos 3 dias de abstinência sexual",
+        "Se houver uso de creme vaginal, aguardar 7 dias para fazer o exame",
+        "Não estar com sangramento menstrual",
+        "Caso exista bacterioscopia, comparecer preferencialmente sem higiene íntima",
+        "Chegar com 30 minutos de antecedência para cadastro"
+      ],
+      "documentos": [
+        "Documento pessoal com foto",
+        "Edital",
+        "Cartão PAX"
+      ]
+    },
+    {
+      "id": "ag_mamas",
+      "data": "30/10/2026",
+      "horario": "09:00",
+      "tipo": "Ultrassonografia das mamas",
+      "contato": "ultramedical",
+      "profissional": "Dra. Fabiana",
+      "endereco": null,
+      "valor": 200,
+      "exames": [
+        "us_mamas"
+      ],
+      "orientacoes": [
+        "Levar exames anteriores, se houver",
+        "Chegar com 30 minutos de antecedência para cadastro"
       ],
       "documentos": [
         "Documento pessoal com foto",
@@ -481,6 +420,91 @@
         "Cartão PAX",
         "Pedido médico original sem rasuras"
       ]
+    },
+    {
+      "id": "ag_sus",
+      "data": "03/11/2026",
+      "horario": "07:00",
+      "tipo": "Coleta de exames laboratoriais pelo SUS",
+      "contato": "usf_sao_francisco",
+      "profissional": "",
+      "endereco": null,
+      "valor": 0,
+      "exames": [
+        "sus_colesterol_total",
+        "sus_creatinina",
+        "sus_glicose",
+        "sus_hb_glicada",
+        "sus_potassio",
+        "sus_triglicerideos",
+        "sus_hemograma",
+        "sus_sodio",
+        "sus_tsh"
+      ],
+      "orientacoes": [
+        "Jejum",
+        "HDL, LDL e T4 Livre não serão feitos pelo SUS (particular na Ultramedical)"
+      ],
+      "documentos": []
+    },
+    {
+      "id": "ag_oftalmo",
+      "data": "03/11/2026",
+      "horario": "09:00",
+      "tipo": "Parecer oftalmológico",
+      "contato": "meu_oftalmo",
+      "profissional": "Dr. Magno",
+      "endereco": null,
+      "valor": 200,
+      "exames": [
+        "oftalmologico"
+      ],
+      "orientacoes": [
+        "Ordem de chegada a partir de 09h00",
+        "Pedir que o parecer contenha: acuidade visual com e sem correção, refração, biomicroscopia, fundo de olho, tonometria, motilidade e senso cromático, com CRM",
+        "Se usar óculos ou lentes, levar a receita e a correção (exigência do edital)"
+      ],
+      "documentos": [
+        "Documento pessoal com foto",
+        "Edital (Anexo C)",
+        "Receita e óculos/lentes, se usar"
+      ]
+    },
+    {
+      "id": "ag_psico",
+      "data": "03/11/2026",
+      "horario": "14:00",
+      "tipo": "Avaliação psicológica para manuseio de arma",
+      "contato": "andrea_orlandini",
+      "profissional": "",
+      "endereco": null,
+      "valor": 250,
+      "exames": [
+        "psicologico"
+      ],
+      "orientacoes": [
+        "Laudo no mesmo dia"
+      ],
+      "documentos": []
+    },
+    {
+      "id": "ag_audio",
+      "data": "04/11/2026",
+      "horario": "09:45",
+      "tipo": "Audiometria tonal e vocal",
+      "contato": "audioclin",
+      "profissional": "Fonoaudióloga",
+      "endereco": null,
+      "valor": 120,
+      "exames": [
+        "audiometria"
+      ],
+      "orientacoes": [
+        "Laudo assinado pela fonoaudióloga e entregue na hora",
+        "Pedido médico não é necessário",
+        "Pagamento em dinheiro ou Pix"
+      ],
+      "documentos": []
     }
   ],
   "exames": [
@@ -1490,14 +1514,14 @@
       "nome": "Avaliação oftalmológica completa",
       "exigencia": "Parecer com acuidade visual com e sem correção, refração, biomicroscopia, fundo de olho, tonometria, motilidade e senso cromático. Quem usa correção deve levar receita e a correção prescrita",
       "contato": "meu_oftalmo",
-      "profissional": "",
+      "profissional": "Dr. Magno",
       "valor": 200,
-      "valor_tipo": "estimado",
+      "valor_tipo": "confirmado",
       "pacote": null,
       "prazo_resultado": null,
-      "status": "Em cotação",
-      "pendencias": "Confirmar se os R$ 200,00 do Meu Oftalmo incluem todos os itens do edital e o parecer com CRM; marcar",
-      "observacoes": "Valor provisório.",
+      "status": "Agendado",
+      "pendencias": "Conferir no dia se o parecer traz todos os itens do edital (a–g) e assinatura com CRM",
+      "observacoes": "R$ 200,00 com Dr. Magno (Meu Oftalmo). Ordem de chegada a partir de 09h00.",
       "pago": false,
       "data_realizacao": null,
       "data_resultado": null,
@@ -1652,8 +1676,8 @@
     "Obter pedido médico original sem rasuras para os raios-X antes de 30/10",
     "30/10 na Ultramedical: sangue em jejum 06h30, preventivo 07h55, ultrassom 09h00, ECG ~09h40 e raios-X ~10h10",
     "Pedir para antecipar o laudo do preventivo (7 dias úteis passa de 10/11)",
-    "Comparecer ao psicológico com Andrea Orlandini em 03/11 às 14h00",
-    "Fechar oftalmologia e odontologia"
+    "03/11: SUS 07h00 (jejum), oftalmológico 09h00 com Dr. Magno e psicológico 14h00",
+    "Fechar odontologia (avaliação + panorâmica)"
   ],
   "documentos": [
     {

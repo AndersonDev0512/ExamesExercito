@@ -911,10 +911,10 @@ def validate_data(data):
             digitos = only_digits(tel)
             if final and not digitos.endswith(final):
                 erros.append(f"Contato {c['nome']}: final {final} não confere com {tel}.")
-            if len(digitos) == 10:
-                avisos.append(f"Contato {contact_label(c)}: telefone {tel} tem 8 dígitos após o DDD; confirme o número.")
-            elif len(digitos) != 11:
+            if len(digitos) not in (10, 11):
                 erros.append(f"Contato {contact_label(c)}: telefone {tel} inválido.")
+            elif len(digitos) == 10 and not c.get("telefone_confirmado"):
+                avisos.append(f"Contato {contact_label(c)}: telefone {tel} tem 8 dígitos após o DDD; confirme o número.")
 
     for ex in data["exames"]:
         nome = ex.get("nome", ex.get("id"))
