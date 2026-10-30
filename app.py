@@ -423,7 +423,7 @@ def exam_value_label(exame, pacotes):
         return "Fora do total"
     if status == "SUS" or tipo == "sus":
         return "SUS (sem custo)"
-    valor = brl(exame.get("valor"))
+    valor = brl(exame.get("valor"), "Incluso" if exame.get("pacote") else "A cotar")
     if exame.get("pacote"):
         pacote = pacotes.get(exame["pacote"], {})
         return f"{valor} (no pacote {pacote.get('nome', exame['pacote'])})"
@@ -925,7 +925,7 @@ def validate_data(data):
         valor = ex.get("valor")
         if valor is not None and (not isinstance(valor, (int, float)) or valor < 0):
             erros.append(f"Exame {nome}: valor inválido {valor!r}.")
-        if valor is None and ex.get("valor_tipo") in VALOR_TIPOS_NO_TOTAL:
+        if valor is None and ex.get("valor_tipo") in VALOR_TIPOS_NO_TOTAL and not ex.get("pacote"):
             avisos.append(f"Exame {nome}: tipo de valor '{ex['valor_tipo']}' sem valor informado.")
         if ex.get("contato") and ex["contato"] not in contatos:
             erros.append(f"Exame {nome}: contato '{ex['contato']}' não existe.")
@@ -954,6 +954,8 @@ def validate_data(data):
             avisos.append(f"Pacote {pac['nome']} não tem exames vinculados.")
             continue
         soma = sum(e.get("valor") or 0 for e in itens)
+        if pac.get("soma_itens_estimada"):
+            continue
         if pac.get("valor") is not None and abs(soma - pac["valor"]) > 0.005:
             avisos.append(
                 f"Pacote {pac['nome']}: itens somam {brl(soma)}, mas o pacote vale {brl(pac['valor'])}. "
@@ -1633,8 +1635,35 @@ def tab_contacts(data):
         )
 
 
+def render_protocols(data):
+    exames = index_by_id(data["exames"])
+    contatos = index_by_id(data["contatos"])
+    for prot in data.get("protocolos", []):
+        contato = contatos.get(prot.get("contato"))
+        st.markdown(f"#### 🧾 Protocolo {prot['numero']} — {contact_label(contato) if contato else ''}")
+        st.caption(
+            f"Realizado em {prot.get('realizado_em', '—')} · valor pago {brl(prot.get('valor_pago'))} · "
+            f"saldo devedor {brl(prot.get('saldo_devedor'), '—')}"
+        )
+        for aviso in prot.get("avisos", []):
+            st.info(aviso)
+        linhas = []
+        for item in prot.get("itens", []):
+            ex = exames.get(item.get("exame"))
+            linhas.append({
+                "Entrega": item["entrega"],
+                "Exame no protocolo": item["descricao"],
+                "Exame no painel": ex.get("nome") if ex else "—",
+                "Status": ex.get("status") if ex else "",
+                "_ordem": parse_date(item["entrega"]) or date.max,
+            })
+        df = pd.DataFrame(linhas).sort_values(["_ordem", "Exame no protocolo"]).drop(columns="_ordem")
+        st.dataframe(style_cells(df, ["Status"]), hide_index=True, width="stretch")
+
+
 def tab_edital(data):
     st.subheader("📄 Edital PDF")
+    render_protocols(data)
     documentos = data.get("documentos", [])
     if not documentos:
         st.info("Nenhum documento cadastrado em data.json.")
