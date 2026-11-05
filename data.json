@@ -452,7 +452,8 @@
       ],
       "orientacoes": [
         "Jejum",
-        "HDL, LDL e T4 Livre não serão feitos pelo SUS (particular na Ultramedical)"
+        "HDL, LDL e T4 Livre não serão feitos pelo SUS (particular na Ultramedical)",
+        "Pedido 114160864: resultados liberados em 03/11. Creatinina e TSH NÃO foram coletados."
       ],
       "documentos": []
     },
@@ -581,17 +582,17 @@
       "valor_tipo": "sus",
       "pacote": null,
       "prazo_resultado": null,
-      "status": "SUS",
-      "pendencias": "Confirmar prazo do resultado",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Também feito na Ultramedical em 30/10 (resultado em 03/11).",
       "pago": false,
-      "data_realizacao": null,
-      "data_resultado": null,
-      "protocolo": "",
+      "data_realizacao": "03/11/2026",
+      "data_resultado": "03/11/2026",
+      "protocolo": "Pedido SUS 114160864",
       "codigo_acompanhamento": "",
       "portal_ref": {
-        "portal": "ultramedical",
-        "descricao": "AC COLESTEROL TOTAL"
+        "portal": "sus",
+        "descricao": "COLESTEROL"
       }
     },
     {
@@ -606,14 +607,18 @@
       "valor_tipo": "sus",
       "pacote": null,
       "prazo_resultado": null,
-      "status": "SUS",
-      "pendencias": "Confirmar prazo do resultado",
+      "status": "Não iniciado",
+      "pendencias": "Não veio no pedido SUS 114160864 (coleta de 03/11): não foi coletado. Fazer com urgência (nova solicitação no SUS ou particular).",
       "observacoes": "",
       "pago": false,
       "data_realizacao": null,
       "data_resultado": null,
       "protocolo": "",
-      "codigo_acompanhamento": ""
+      "codigo_acompanhamento": "",
+      "portal_ref": {
+        "portal": "sus",
+        "descricao": "CREATININA"
+      }
     },
     {
       "id": "sus_glicose",
@@ -627,14 +632,18 @@
       "valor_tipo": "sus",
       "pacote": null,
       "prazo_resultado": null,
-      "status": "SUS",
-      "pendencias": "Confirmar prazo do resultado",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
-      "data_realizacao": null,
-      "data_resultado": null,
-      "protocolo": "",
-      "codigo_acompanhamento": ""
+      "data_realizacao": "03/11/2026",
+      "data_resultado": "03/11/2026",
+      "protocolo": "Pedido SUS 114160864",
+      "codigo_acompanhamento": "",
+      "portal_ref": {
+        "portal": "sus",
+        "descricao": "GLICOSE"
+      }
     },
     {
       "id": "sus_hb_glicada",
@@ -648,14 +657,18 @@
       "valor_tipo": "sus",
       "pacote": null,
       "prazo_resultado": null,
-      "status": "SUS",
-      "pendencias": "Confirmar prazo do resultado",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
-      "data_realizacao": null,
-      "data_resultado": null,
-      "protocolo": "",
-      "codigo_acompanhamento": ""
+      "data_realizacao": "03/11/2026",
+      "data_resultado": "03/11/2026",
+      "protocolo": "Pedido SUS 114160864",
+      "codigo_acompanhamento": "",
+      "portal_ref": {
+        "portal": "sus",
+        "descricao": "HEMOGLOBINA GLICADA"
+      }
     },
     {
       "id": "sus_potassio",
@@ -669,14 +682,18 @@
       "valor_tipo": "sus",
       "pacote": null,
       "prazo_resultado": null,
-      "status": "SUS",
-      "pendencias": "Confirmar prazo do resultado",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
-      "data_realizacao": null,
-      "data_resultado": null,
-      "protocolo": "",
-      "codigo_acompanhamento": ""
+      "data_realizacao": "03/11/2026",
+      "data_resultado": "03/11/2026",
+      "protocolo": "Pedido SUS 114160864",
+      "codigo_acompanhamento": "",
+      "portal_ref": {
+        "portal": "sus",
+        "descricao": "POTASSIO"
+      }
     },
     {
       "id": "sus_triglicerideos",
@@ -690,14 +707,18 @@
       "valor_tipo": "sus",
       "pacote": null,
       "prazo_resultado": null,
-      "status": "SUS",
-      "pendencias": "Confirmar prazo do resultado",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
-      "data_realizacao": null,
-      "data_resultado": null,
-      "protocolo": "",
-      "codigo_acompanhamento": ""
+      "data_realizacao": "03/11/2026",
+      "data_resultado": "03/11/2026",
+      "protocolo": "Pedido SUS 114160864",
+      "codigo_acompanhamento": "",
+      "portal_ref": {
+        "portal": "sus",
+        "descricao": "TRIGLICERIDEOS"
+      }
     },
     {
       "id": "sus_hemograma",
@@ -711,14 +732,18 @@
       "valor_tipo": "sus",
       "pacote": null,
       "prazo_resultado": null,
-      "status": "SUS",
-      "pendencias": "Confirmar prazo do resultado",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
-      "data_realizacao": null,
-      "data_resultado": null,
-      "protocolo": "",
-      "codigo_acompanhamento": ""
+      "data_realizacao": "03/11/2026",
+      "data_resultado": "03/11/2026",
+      "protocolo": "Pedido SUS 114160864",
+      "codigo_acompanhamento": "",
+      "portal_ref": {
+        "portal": "sus",
+        "descricao": "HEMOGRAMA I"
+      }
     },
     {
       "id": "sus_sodio",
@@ -732,14 +757,18 @@
       "valor_tipo": "sus",
       "pacote": null,
       "prazo_resultado": null,
-      "status": "SUS",
-      "pendencias": "Confirmar prazo do resultado",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
-      "data_realizacao": null,
-      "data_resultado": null,
-      "protocolo": "",
-      "codigo_acompanhamento": ""
+      "data_realizacao": "03/11/2026",
+      "data_resultado": "03/11/2026",
+      "protocolo": "Pedido SUS 114160864",
+      "codigo_acompanhamento": "",
+      "portal_ref": {
+        "portal": "sus",
+        "descricao": "SODIO"
+      }
     },
     {
       "id": "sus_tsh",
@@ -753,14 +782,18 @@
       "valor_tipo": "sus",
       "pacote": null,
       "prazo_resultado": null,
-      "status": "SUS",
-      "pendencias": "Confirmar prazo do resultado",
+      "status": "Não iniciado",
+      "pendencias": "Não veio no pedido SUS 114160864 (coleta de 03/11): não foi coletado. Fazer com urgência (nova solicitação no SUS ou particular).",
       "observacoes": "",
       "pago": false,
       "data_realizacao": null,
       "data_resultado": null,
       "protocolo": "",
-      "codigo_acompanhamento": ""
+      "codigo_acompanhamento": "",
+      "portal_ref": {
+        "portal": "sus",
+        "descricao": "TSH"
+      }
     },
     {
       "id": "hdl",

@@ -4,6 +4,8 @@
   O botão "Visualizar todos" devolve um único PDF com todos os laudos disponíveis.
 - Sodré (toxicológico): portal do doador com login Keycloak (CPF com máscara e senha).
   A API do portal informa a rastreabilidade da amostra e o laudo é baixado em PDF.
+- SUS (LABCEM, Prefeitura de Campo Grande): sistema Net, login com usuário e senha da etiqueta
+  de coleta. A API lista os pedidos e o laudo de cada pedido sai em PDF.
 
 As credenciais chegam por parâmetro (vêm de st.secrets) e nunca são gravadas.
 """
@@ -11,6 +13,7 @@ As credenciais chegam por parâmetro (vêm de st.secrets) e nunca são gravadas.
 import base64
 import re
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from urllib.parse import urljoin
 
 try:  # Em redes com proxy corporativo, usa os certificados do sistema operacional.
@@ -33,6 +36,8 @@ ULTRA_CAMPO = "ctl00$ContentPlaceHolderConteudo$"
 
 SODRE_BASE = "https://cliente.sodretox.com.br"
 SODRE_RESULTADOS = SODRE_BASE + "/minha-conta/resultados"
+
+SUS_BASE = "http://exames.capital.ms.gov.br"  # o site não responde em https
 
 
 class PortalErro(Exception):
@@ -198,4 +203,66 @@ def sodre_buscar(cpf, senha, baixar=True):
             if not r.content.startswith(b"%PDF"):
                 raise PortalErro("Sodré: o portal não devolveu o PDF do laudo.")
             resultado.laudos.append(Laudo(f"Toxicológico — OS {os_num}", f"toxicologico_{os_num}.pdf", r.content))
+    return resultado
+
+
+# ---------------------------------------------------------------------------
+# SUS — LABCEM / Prefeitura de Campo Grande (sistema Net, da Matrix)
+# ---------------------------------------------------------------------------
+
+def _data_br(iso):
+    return f"{iso[8:10]}/{iso[5:7]}/{iso[:4]}" if iso and len(iso) >= 10 else ""
+
+
+def sus_buscar(usuario, senha, baixar=True, desde_dias=120):
+    """Usuário e senha vêm na etiqueta entregue na coleta. Só considera pedidos recentes."""
+    s = _sessao()
+    soup = BeautifulSoup(s.get(SUS_BASE + "/wfrmLogin.aspx", timeout=TIMEOUT).text, "html.parser")
+    form = soup.find("form")
+    if not form or not form.find("input", {"name": "userLogin"}):
+        raise PortalErro("SUS: página de login mudou (formulário não encontrado).")
+    dados = _inputs(form)
+    dados.update(userLogin=str(usuario).strip(), userPassword=str(senha).strip(), acceptCookie="true")
+    r = s.post(SUS_BASE + "/wfrmLogin.aspx", data=dados, timeout=TIMEOUT)
+    if "wfrmLogin.aspx" in r.url:
+        raise PortalErro("SUS: login recusado. Confira usuário e senha da etiqueta nos secrets.")
+    token = s.get(SUS_BASE + "/wfrmLogin.aspx/ValidaToken",
+                  headers={"Content-Type": "application/json", "X-Authenticate": ""}, timeout=TIMEOUT).json().get("d")
+    if not token:
+        raise PortalErro("SUS: não foi possível obter o token de acesso.")
+    r = s.get(SUS_BASE + "/api/resultados", params={"resultadosRecentes": "True"},
+              headers={"Authorization": f"Bearer {token}"}, timeout=TIMEOUT)
+    pedidos = (r.json() or {}).get("pedidos") or []
+
+    limite = (datetime.now() - timedelta(days=desde_dias)).strftime("%Y-%m-%d")
+    resultado = ResultadoPortal("sus")
+    for p in pedidos:
+        if (p.get("dataPedido") or "")[:10] < limite:
+            continue
+        prontos = []
+        for proc in p.get("procedimentos") or []:
+            # Depois de aberto, o status muda de "Pronto" para "Visto"/"Impresso"; vale a data de liberação.
+            situacao = (proc.get("statusDescricao") or "").lower()
+            pronto = bool(proc.get("dataLiberacao")) and "cancel" not in situacao and "aguard" not in situacao
+            resultado.itens.append({
+                "data": _data_br(proc.get("dataColeta")),
+                "descricao": proc.get("nome", ""),
+                "status": "Pronto" if pronto else (proc.get("statusDescricao") or "").capitalize(),
+                "pedido": p.get("pedido"),
+                "previsao": _data_br(proc.get("previsaoEntrega")),
+            })
+            if pronto and proc.get("permiteExibirInternet") == 1:
+                prontos.append(str(proc["seqProcedimento"]))
+        if not (baixar and prontos):
+            continue
+        r = s.post(SUS_BASE + "/wfrmLaudo.aspx", timeout=TIMEOUT, data={
+            "txtNumeroPedido": p["pedidoCript"],  # muda a cada sessão
+            "txtMedico": p.get("solicitante", ""),
+            "txtTipoLaudo": "PDF",
+            "txtMarcaImpresso": "1",
+            "txtProcedimentos": ";".join(prontos),
+        })
+        if not r.content.startswith(b"%PDF"):
+            raise PortalErro(f"SUS: o portal não devolveu o PDF do pedido {p.get('pedido')}.")
+        resultado.laudos.append(Laudo(f"SUS (LABCEM) — pedido {p.get('pedido')}", f"sus_{p.get('pedido')}.pdf", r.content))
     return resultado

@@ -1685,11 +1685,16 @@ senha = "senha-impressa-no-protocolo"
 [resultados.sodre]
 cpf = "000.000.000-00"
 senha = "senha-do-protocolo-de-coleta"
+
+[resultados.sus]
+usuario = "00000000"   # etiqueta da coleta (exames.capital.ms.gov.br)
+senha = "000000"
 """
 
 PORTAIS = {
     "ultramedical": ("Ultramedical", portais.ultramedical_buscar),
     "sodre": ("Sodré (toxicológico)", portais.sodre_buscar),
+    "sus": ("SUS (LABCEM)", portais.sus_buscar),
 }
 
 
@@ -1716,12 +1721,13 @@ def buscar_resultados(cfg):
     busca = {"quando": datetime.now(FUSO_MS), "portais": {}, "erros": {}}
     for chave, (nome, funcao) in PORTAIS.items():
         cred = cfg.get(chave) or {}
-        if not cred.get("cpf") or not cred.get("senha"):
-            busca["erros"][chave] = f"{nome}: CPF e senha não configurados nos secrets."
+        login = cred.get("cpf") or cred.get("usuario")
+        if not login or not cred.get("senha"):
+            busca["erros"][chave] = f"{nome}: login e senha não configurados nos secrets."
             continue
         with st.spinner(f"Consultando {nome}..."):
             try:
-                busca["portais"][chave] = funcao(cred["cpf"], cred["senha"])
+                busca["portais"][chave] = funcao(login, cred["senha"])
             except portais.PortalErro as exc:
                 busca["erros"][chave] = str(exc)
             except Exception as exc:  # rede, timeout, mudança no site
@@ -1745,7 +1751,7 @@ def situacao_no_portal(exame, busca):
 
 
 def disponivel(situacao):
-    return situacao.lower().startswith(("dispon", "laudo liberado"))
+    return situacao.lower().startswith(("dispon", "laudo liberado", "pronto"))
 
 
 def _marcar_recebidos(ids, dia):
@@ -1822,7 +1828,7 @@ def tab_resultados(data, hoje):
         for erro in busca["erros"].values():
             st.error(erro)
     else:
-        st.caption("Toque em “Buscar resultados” para consultar a Ultramedical e a Sodré.")
+        st.caption("Toque em “Buscar resultados” para consultar a Ultramedical, a Sodré e o SUS.")
 
     if not modo_impressao:
         exames = [e for e in sorted(data["exames"], key=lambda e: e.get("ordem", 0))

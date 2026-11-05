@@ -24,7 +24,7 @@ ExamesExercito/
 | **Visão geral** | Prazo interno (10/11), conferência (11/11), apresentação (12/11), subtotal, agendados, pendentes, resultados recebidos, risco de atraso, próximos compromissos, alertas, prioridades e resumo financeiro |
 | **Agenda** | Calendário visual até a apresentação e compromissos em ordem cronológica, com horário, clínica, final do contato, endereço, valor, status, orientações e documentos. Filtros por data, clínica, status e tipo |
 | **Exames** | Tabela com status e risco coloridos, pesquisa em todas as colunas (sem diferenciar acentos), filtros por status e grupo, e a separação entre SUS e particular |
-| **Resultados** | Consulta os portais da Ultramedical e da Sodré, mostra o que já saiu de cada exame, marca “Resultado recebido” e exibe os laudos um embaixo do outro, prontos para imprimir |
+| **Resultados** | Consulta os portais da Ultramedical, da Sodré e do SUS, mostra o que já saiu de cada exame, marca “Resultado recebido” e exibe os laudos um embaixo do outro, prontos para imprimir |
 | **Financeiro** | Total geral, confirmado, orçamentos, estimado, pago, não pago, valor por exame e por grupo, comparativo entre clínicas e economia |
 | **Contatos** | Nome com os 4 últimos dígitos, telefone e botão de WhatsApp (`https://wa.me/55NUMERO`), somente para números cadastrados |
 | **Edital PDF** | Páginas do Anexo C do edital (relação de exames, laudos e avaliações) em imagem, legíveis no celular |
@@ -100,6 +100,7 @@ A aba **Resultados** entra nos portais com CPF e senha, lista a situação de ca
 
 - **Ultramedical** (Pixeon Korus): o botão “Visualizar todos” do portal devolve um PDF único com todos os laudos disponíveis.
 - **Sodré** (toxicológico): mostra o andamento da amostra e baixa o laudo principal quando está liberado.
+- **SUS** (LABCEM, `exames.capital.ms.gov.br`): usa o usuário e a senha da etiqueta da coleta e baixa o PDF de cada pedido dos últimos 120 dias.
 
 Os laudos ficam só na sessão do navegador: não são gravados no disco nem no GitHub. Cada laudo é exibido página por página, uma embaixo da outra. Para imprimir, ative **“Só os laudos”** e use Ctrl+P (no celular, Compartilhar → Imprimir). Laudos em papel podem ser adicionados por foto ou PDF na mesma aba.
 
@@ -119,9 +120,13 @@ senha = "senha-impressa-no-protocolo"
 [resultados.sodre]
 cpf = "000.000.000-00"
 senha = "senha-do-protocolo-de-coleta"
+
+[resultados.sus]
+usuario = "00000000"   # etiqueta da coleta
+senha = "000000"
 ```
 
-Cada exame do `data.json` aponta para o portal pelo campo `portal_ref` (`{"portal": "ultramedical", "descricao": "AC UREIA"}` ou `{"portal": "sodre", "os": "..."}`). Se o laboratório mudar o portal, a aba mostra o erro e o resto do painel continua funcionando.
+Cada exame do `data.json` aponta para o portal pelo campo `portal_ref` (`{"portal": "ultramedical", "descricao": "AC UREIA"}`, `{"portal": "sodre", "os": "..."}` ou `{"portal": "sus", "descricao": "GLICOSE"}`). Se o laboratório mudar o portal, a aba mostra o erro e o resto do painel continua funcionando.
 
 ## Segurança
 
