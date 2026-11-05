@@ -1676,7 +1676,7 @@ def render_protocols(data):
 
 
 SECRETS_MODELO = """[resultados]
-senha_app = "escolha-uma-senha"   # senha para abrir a aba Resultados
+# senha_app = "escolha-uma-senha"   # opcional: pede senha para abrir a aba Resultados
 
 [resultados.ultramedical]
 cpf = "00000000000"
@@ -1783,7 +1783,7 @@ def render_laudo(titulo, conteudo, nome_arquivo, chave):
 def tab_resultados(data, hoje):
     st.subheader("🧾 Resultados")
     cfg = secrets_resultados()
-    if not cfg.get("senha_app"):
+    if not any((cfg.get(p) or {}).get("senha") for p in PORTAIS):
         st.warning(
             "Para buscar os laudos nos portais, configure os secrets do app. No Streamlit Cloud: "
             "**Manage app → Settings → Secrets**. Localmente: arquivo `.streamlit/secrets.toml` (não vai para o GitHub)."
@@ -1791,7 +1791,8 @@ def tab_resultados(data, hoje):
         st.code(SECRETS_MODELO, language="toml")
         return
 
-    if not st.session_state.get("resultados_liberado"):
+    com_senha = bool(cfg.get("senha_app"))  # opcional: sem senha_app, a aba abre direto
+    if com_senha and not st.session_state.get("resultados_liberado"):
         st.info("Os laudos têm dados de saúde. Digite a senha da aba para continuar.")
         with st.form("form_resultados_login"):
             senha = st.text_input("Senha da aba Resultados", type="password")
@@ -1809,7 +1810,7 @@ def tab_resultados(data, hoje):
     if c1.button("🔄 Buscar resultados nos portais", type="primary", width="stretch"):
         buscar_resultados(cfg)
     modo_impressao = c2.toggle("🖨️ Só os laudos", help="Esconde as tabelas para imprimir apenas os laudos.")
-    if c3.button("🔒 Sair", width="stretch"):
+    if com_senha and c3.button("🔒 Sair", width="stretch"):
         for chave in ("resultados_liberado", "resultados_busca"):
             st.session_state.pop(chave, None)
         st.rerun()

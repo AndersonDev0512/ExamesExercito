@@ -24,7 +24,7 @@ ExamesExercito/
 | **Visão geral** | Prazo interno (10/11), conferência (11/11), apresentação (12/11), subtotal, agendados, pendentes, resultados recebidos, risco de atraso, próximos compromissos, alertas, prioridades e resumo financeiro |
 | **Agenda** | Calendário visual até a apresentação e compromissos em ordem cronológica, com horário, clínica, final do contato, endereço, valor, status, orientações e documentos. Filtros por data, clínica, status e tipo |
 | **Exames** | Tabela com status e risco coloridos, pesquisa em todas as colunas (sem diferenciar acentos), filtros por status e grupo, e a separação entre SUS e particular |
-| **Resultados** | Protegida por senha. Consulta os portais da Ultramedical e da Sodré, mostra o que já saiu de cada exame, marca “Resultado recebido” e exibe os laudos um embaixo do outro, prontos para imprimir |
+| **Resultados** | Consulta os portais da Ultramedical e da Sodré, mostra o que já saiu de cada exame, marca “Resultado recebido” e exibe os laudos um embaixo do outro, prontos para imprimir |
 | **Financeiro** | Total geral, confirmado, orçamentos, estimado, pago, não pago, valor por exame e por grupo, comparativo entre clínicas e economia |
 | **Contatos** | Nome com os 4 últimos dígitos, telefone e botão de WhatsApp (`https://wa.me/55NUMERO`), somente para números cadastrados |
 | **Edital PDF** | Páginas do Anexo C do edital (relação de exames, laudos e avaliações) em imagem, legíveis no celular |
@@ -110,7 +110,7 @@ As credenciais ficam nos **secrets**, nunca no código:
 
 ```toml
 [resultados]
-senha_app = "escolha-uma-senha"   # senha para abrir a aba Resultados
+# senha_app = "escolha-uma-senha"   # opcional: pede senha para abrir a aba Resultados
 
 [resultados.ultramedical]
 cpf = "00000000000"
@@ -126,6 +126,6 @@ Cada exame do `data.json` aponta para o portal pelo campo `portal_ref` (`{"porta
 ## Segurança
 
 - Não coloque senhas, tokens ou segredos no repositório. Use `.streamlit/secrets.toml` (local) ou os Secrets do Streamlit Cloud.
-- A aba Resultados exige a `senha_app`, porque o app publicado pode ser aberto por qualquer pessoa com o link.
+- A `senha_app` é opcional. Sem ela, qualquer pessoa com o link do app consegue abrir a aba Resultados e ver os laudos.
 - PDFs e planilhas (laudos, orçamentos) são ignorados pelo Git para não publicar documentos pessoais por engano.
 - Se o repositório for público, lembre que `data.json` contém nome, telefones de prestadores e a agenda.
