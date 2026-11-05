@@ -10,6 +10,7 @@ ExamesExercito/
 │   └── config.toml      # tema claro e configurações do servidor
 ├── .gitignore
 ├── app.py               # interface e funções reutilizáveis
+├── portais.py           # busca de laudos nos portais da Ultramedical e da Sodré
 ├── static/              # páginas do Anexo C do edital (imagens)
 ├── data.json            # todos os dados do painel
 ├── README.md
@@ -23,6 +24,7 @@ ExamesExercito/
 | **Visão geral** | Prazo interno (10/11), conferência (11/11), apresentação (12/11), subtotal, agendados, pendentes, resultados recebidos, risco de atraso, próximos compromissos, alertas, prioridades e resumo financeiro |
 | **Agenda** | Calendário visual até a apresentação e compromissos em ordem cronológica, com horário, clínica, final do contato, endereço, valor, status, orientações e documentos. Filtros por data, clínica, status e tipo |
 | **Exames** | Tabela com status e risco coloridos, pesquisa em todas as colunas (sem diferenciar acentos), filtros por status e grupo, e a separação entre SUS e particular |
+| **Resultados** | Protegida por senha. Consulta os portais da Ultramedical e da Sodré, mostra o que já saiu de cada exame, marca “Resultado recebido” e exibe os laudos um embaixo do outro, prontos para imprimir |
 | **Financeiro** | Total geral, confirmado, orçamentos, estimado, pago, não pago, valor por exame e por grupo, comparativo entre clínicas e economia |
 | **Contatos** | Nome com os 4 últimos dígitos, telefone e botão de WhatsApp (`https://wa.me/55NUMERO`), somente para números cadastrados |
 | **Edital PDF** | Páginas do Anexo C do edital (relação de exames, laudos e avaliações) em imagem, legíveis no celular |
@@ -92,8 +94,38 @@ Status permitidos: Não iniciado, Em cotação, Aguardando resposta, Quase fecha
 
 As páginas do Anexo C ficam como imagens em `static/` e aparecem na aba **Edital PDF**. Para trocar ou acrescentar páginas, gere novas imagens (PNG) do PDF, coloque em `static/` e liste os caminhos em `documentos[].imagens` no `data.json`.
 
+## Resultados (portais dos laboratórios)
+
+A aba **Resultados** entra nos portais com CPF e senha, lista a situação de cada exame e baixa os laudos em PDF:
+
+- **Ultramedical** (Pixeon Korus): o botão “Visualizar todos” do portal devolve um PDF único com todos os laudos disponíveis.
+- **Sodré** (toxicológico): mostra o andamento da amostra e baixa o laudo principal quando está liberado.
+
+Os laudos ficam só na sessão do navegador: não são gravados no disco nem no GitHub. Cada laudo é exibido página por página, uma embaixo da outra. Para imprimir, ative **“Só os laudos”** e use Ctrl+P (no celular, Compartilhar → Imprimir). Laudos em papel podem ser adicionados por foto ou PDF na mesma aba.
+
+As credenciais ficam nos **secrets**, nunca no código:
+
+- Streamlit Cloud: **Manage app → Settings → Secrets**.
+- Local: `.streamlit/secrets.toml`, que está no `.gitignore`.
+
+```toml
+[resultados]
+senha_app = "escolha-uma-senha"   # senha para abrir a aba Resultados
+
+[resultados.ultramedical]
+cpf = "00000000000"
+senha = "senha-impressa-no-protocolo"
+
+[resultados.sodre]
+cpf = "000.000.000-00"
+senha = "senha-do-protocolo-de-coleta"
+```
+
+Cada exame do `data.json` aponta para o portal pelo campo `portal_ref` (`{"portal": "ultramedical", "descricao": "AC UREIA"}` ou `{"portal": "sodre", "os": "..."}`). Se o laboratório mudar o portal, a aba mostra o erro e o resto do painel continua funcionando.
+
 ## Segurança
 
-- Não coloque senhas, tokens ou segredos no repositório. Se precisar, use `.streamlit/secrets.toml`, que está no `.gitignore`.
+- Não coloque senhas, tokens ou segredos no repositório. Use `.streamlit/secrets.toml` (local) ou os Secrets do Streamlit Cloud.
+- A aba Resultados exige a `senha_app`, porque o app publicado pode ser aberto por qualquer pessoa com o link.
 - PDFs e planilhas (laudos, orçamentos) são ignorados pelo Git para não publicar documentos pessoais por engano.
 - Se o repositório for público, lembre que `data.json` contém nome, telefones de prestadores e a agenda.

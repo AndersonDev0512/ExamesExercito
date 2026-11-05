@@ -553,17 +553,21 @@
       "valor_tipo": "confirmado",
       "pacote": null,
       "prazo_resultado": null,
-      "status": "Realizado",
-      "pendencias": "Acompanhar o resultado com o protocolo e o código de acompanhamento",
-      "observacoes": "Realizado em 29/10/2026. Resultado em 5 a 10 dias úteis (entre 06/11 e 13/11).",
+      "status": "Resultado recebido",
+      "pendencias": "",
+      "observacoes": "Coleta em 29/10/2026; laudo liberado pela Sodré em 04/11/2026 (portal do doador).",
       "pago": false,
       "data_realizacao": "29/10/2026",
-      "data_resultado": null,
-      "protocolo": "",
+      "data_resultado": "04/11/2026",
+      "protocolo": "2606000731",
       "codigo_acompanhamento": "",
       "status_anterior": "Agendado",
       "prazo_dias_uteis": 10,
-      "prazo_dias_uteis_min": 5
+      "prazo_dias_uteis_min": 5,
+      "portal_ref": {
+        "portal": "sodre",
+        "os": "2606000731"
+      }
     },
     {
       "id": "sus_colesterol_total",
@@ -584,7 +588,11 @@
       "data_realizacao": null,
       "data_resultado": null,
       "protocolo": "",
-      "codigo_acompanhamento": ""
+      "codigo_acompanhamento": "",
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC COLESTEROL TOTAL"
+      }
     },
     {
       "id": "sus_creatinina",
@@ -766,15 +774,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "03/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Orçamento Ultramedical de 28/10/2026 (tabela especial PAX), válido por 1 mês. Não realizado pelo SUS.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC COLESTEROL (HDL)"
+      }
     },
     {
       "id": "ldl",
@@ -788,15 +800,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "03/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Orçamento Ultramedical de 28/10/2026 (tabela especial PAX), válido por 1 mês. Não realizado pelo SUS.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC COLESTEROL LDL"
+      }
     },
     {
       "id": "t4_livre",
@@ -810,15 +826,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "03/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Orçamento Ultramedical de 28/10/2026 (tabela especial PAX), válido por 1 mês. Não realizado pelo SUS.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC T4L (TIROXINA LIVRE)"
+      }
     },
     {
       "id": "anti_hcv",
@@ -832,15 +852,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "05/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC HEPATITE C - ANTI HCV"
+      }
     },
     {
       "id": "anti_hiv",
@@ -854,15 +878,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "05/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC HIV1+HIV2 PESQ. DE ANTICORPO"
+      }
     },
     {
       "id": "vdrl",
@@ -876,15 +904,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "03/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC VDRL"
+      }
     },
     {
       "id": "eas",
@@ -898,15 +930,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "03/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC EAS, URINA TIPO I"
+      }
     },
     {
       "id": "chagas_igg",
@@ -920,15 +956,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "09/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC CHAGAS, IFI - IGG"
+      }
     },
     {
       "id": "chagas_igm",
@@ -942,15 +982,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "09/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "O Anexo C pede anti-HAV, anti-HBc e sorologia de Chagas sem especificar IgM; confirmar com o laboratório se este item é necessário antes de remover.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC CHAGAS, IFI - IGM"
+      }
     },
     {
       "id": "beta_hcg",
@@ -964,16 +1008,20 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "30/10/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
       "ordem_chegada": true,
-      "validade_dias": 15
+      "validade_dias": 15,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC BHCG QUANTITATIVO"
+      }
     },
     {
       "id": "grupo_sanguineo",
@@ -987,15 +1035,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "03/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC GRUPO SANGUINEO E FATOR RH"
+      }
     },
     {
       "id": "tgo",
@@ -1009,15 +1061,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "03/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC TGO / AST"
+      }
     },
     {
       "id": "tgp",
@@ -1031,15 +1087,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "03/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC TGP / ALT"
+      }
     },
     {
       "id": "bilirrubinas",
@@ -1053,15 +1113,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "03/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC BILIRRUBINAS TOTAL E FRAÇÕES"
+      }
     },
     {
       "id": "fosfatase_alcalina",
@@ -1075,15 +1139,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "03/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC FOSFATASE ALCALINA"
+      }
     },
     {
       "id": "hav_igg",
@@ -1097,15 +1165,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "05/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC HEPATITE A HVA - HAV IGG"
+      }
     },
     {
       "id": "hav_igm",
@@ -1119,15 +1191,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "05/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "O Anexo C pede anti-HAV, anti-HBc e sorologia de Chagas sem especificar IgM; confirmar com o laboratório se este item é necessário antes de remover.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC HEPATITE A HAV - HVA IGM"
+      }
     },
     {
       "id": "hbsag",
@@ -1141,15 +1217,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "05/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC HEPATITE B - HBSAG"
+      }
     },
     {
       "id": "anti_hbs",
@@ -1163,15 +1243,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "05/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC HEPATITE B - ANTI HBS (ANTIGENO DE SUPERFICIE"
+      }
     },
     {
       "id": "anti_hbc_total",
@@ -1185,15 +1269,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "05/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC HEPATITE B - ANTI HBC IGG - ANTI HBC TOTAL"
+      }
     },
     {
       "id": "anti_hbc_igm",
@@ -1207,15 +1295,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "05/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "O Anexo C pede anti-HAV, anti-HBc e sorologia de Chagas sem especificar IgM; confirmar com o laboratório se este item é necessário antes de remover.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC HEPATITE B - ANTI HBC IGM"
+      }
     },
     {
       "grupo": "Laboratoriais particulares",
@@ -1226,18 +1318,22 @@
       "valor_tipo": "orcamento",
       "pacote": "ultra_30_10",
       "prazo_resultado": "03/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Incluído na coleta de 30/10 (consta no protocolo). Valor dentro do total pago.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
       "ordem_chegada": true,
       "id": "gama_gt",
       "nome": "Gama GT",
-      "ordem": 32
+      "ordem": 32,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC GAMA-GLUTAMIL TRANSFERASE"
+      }
     },
     {
       "grupo": "Laboratoriais particulares",
@@ -1248,18 +1344,22 @@
       "valor_tipo": "orcamento",
       "pacote": "ultra_30_10",
       "prazo_resultado": "03/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Incluído na coleta de 30/10 (consta no protocolo). Valor dentro do total pago.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
       "ordem_chegada": true,
       "id": "ureia",
       "nome": "Ureia",
-      "ordem": 33
+      "ordem": 33,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC UREIA"
+      }
     },
     {
       "grupo": "Laboratoriais particulares",
@@ -1270,18 +1370,22 @@
       "valor_tipo": "orcamento",
       "pacote": "ultra_30_10",
       "prazo_resultado": "03/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Incluído na coleta de 30/10 (consta no protocolo). Valor dentro do total pago.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
       "ordem_chegada": true,
       "id": "acido_urico",
       "nome": "Ácido úrico",
-      "ordem": 34
+      "ordem": 34,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC ACIDO URICO"
+      }
     },
     {
       "id": "fator_reumatoide",
@@ -1302,7 +1406,11 @@
       "data_realizacao": "30/10/2026",
       "data_resultado": null,
       "protocolo": "4/856270",
-      "codigo_acompanhamento": ""
+      "codigo_acompanhamento": "",
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC FATOR REUMATÓIDE - TURBID"
+      }
     },
     {
       "id": "vldl",
@@ -1323,7 +1431,11 @@
       "data_realizacao": "30/10/2026",
       "data_resultado": null,
       "protocolo": "4/856270",
-      "codigo_acompanhamento": ""
+      "codigo_acompanhamento": "",
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AC COLESTEROL VLDL"
+      }
     },
     {
       "id": "rx_mmii",
@@ -1337,16 +1449,20 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "09/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Ultramedical confirmou: o raio-X segue as regiões informadas no edital e acompanha laudo. Resultado em até 5 dias úteis (média). Ordem de chegada.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
       "prazo_dias_uteis": 5,
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "RX PANORAMICA DE MEMBROS INFERIORES (1INC)"
+      }
     },
     {
       "id": "rx_mmss",
@@ -1360,16 +1476,20 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "09/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Ultramedical confirmou: o raio-X segue as regiões informadas no edital e acompanha laudo. Resultado em até 5 dias úteis (média). Ordem de chegada.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
       "prazo_dias_uteis": 5,
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "RX PANORAMICA DE MEMBROS SUPERIORES (1 INC)"
+      }
     },
     {
       "id": "rx_coluna",
@@ -1383,16 +1503,20 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "09/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Ultramedical confirmou: o raio-X segue as regiões informadas no edital e acompanha laudo. Resultado em até 5 dias úteis (média). Ordem de chegada.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
       "prazo_dias_uteis": 5,
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "RX COLUNA TOTAL ESCOLIOSE PANORAMICA (2INC)"
+      }
     },
     {
       "id": "escanometria",
@@ -1406,16 +1530,20 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "09/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Inclui o RX da bacia. Ultramedical confirmou: o raio-X segue as regiões informadas no edital e acompanha laudo. Resultado em até 5 dias úteis (média). Ordem de chegada.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
       "prazo_dias_uteis": 5,
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "RX ESCANOMETRIA"
+      }
     },
     {
       "id": "rx_bacia",
@@ -1429,16 +1557,20 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "09/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Incluído na RX escanometria do protocolo de 30/10 (não aparece como item separado).",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
       "prazo_dias_uteis": 5,
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "RX ESCANOMETRIA"
+      }
     },
     {
       "id": "rx_torax",
@@ -1452,16 +1584,20 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "09/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Ultramedical confirmou: o raio-X segue as regiões informadas no edital e acompanha laudo. Resultado em até 5 dias úteis (média). Ordem de chegada.",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
       "prazo_dias_uteis": 5,
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "RX TORAX: PA - LAT"
+      }
     },
     {
       "id": "us_mamas",
@@ -1475,15 +1611,19 @@
       "valor_tipo": "confirmado",
       "pacote": "ultra_30_10",
       "prazo_resultado": "04/11/2026",
-      "status": "Realizado",
-      "pendencias": "Retirar o resultado a partir das 17h da data de entrega",
+      "status": "Resultado recebido",
+      "pendencias": "",
       "observacoes": "Acompanha laudo. Resultado em até 3 dias úteis (média).",
       "pago": false,
       "data_realizacao": "30/10/2026",
-      "data_resultado": null,
+      "data_resultado": "04/11/2026",
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "prazo_dias_uteis": 3
+      "prazo_dias_uteis": 3,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "US MAMAS"
+      }
     },
     {
       "id": "ecg",
@@ -1506,7 +1646,11 @@
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
       "prazo_dias_uteis": 3,
-      "ordem_chegada": true
+      "ordem_chegada": true,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "CA ELETROCARDIOGRAMA - ECG"
+      }
     },
     {
       "id": "colpocitologico",
@@ -1538,7 +1682,11 @@
       "data_resultado": null,
       "protocolo": "4/856270",
       "codigo_acompanhamento": "",
-      "prazo_dias_uteis": 7
+      "prazo_dias_uteis": 7,
+      "portal_ref": {
+        "portal": "ultramedical",
+        "descricao": "AP PROCED. DIAG. EM CITOPATOLOGIA"
+      }
     },
     {
       "id": "audiometria",
@@ -1552,12 +1700,12 @@
       "valor_tipo": "confirmado",
       "pacote": null,
       "prazo_resultado": "04/11/2026",
-      "status": "Agendado",
-      "pendencias": "Comparecer",
-      "observacoes": "Laudo assinado pela fonoaudióloga e entregue na hora. Pedido médico não necessário. Dinheiro ou Pix.",
+      "status": "Resultado recebido",
+      "pendencias": "",
+      "observacoes": "Laudo assinado pela fonoaudióloga entregue em 04/11/2026 (papel).",
       "pago": false,
-      "data_realizacao": null,
-      "data_resultado": null,
+      "data_realizacao": "04/11/2026",
+      "data_resultado": "04/11/2026",
       "protocolo": "",
       "codigo_acompanhamento": ""
     },
@@ -1594,12 +1742,12 @@
       "valor_tipo": "confirmado",
       "pacote": null,
       "prazo_resultado": null,
-      "status": "Agendado",
-      "pendencias": "Conferir no dia se o parecer traz todos os itens do edital (a–g) e assinatura com CRM",
-      "observacoes": "R$ 200,00 com Dr. Magno (Meu Oftalmo). Ordem de chegada a partir de 09h00.",
+      "status": "Resultado recebido",
+      "pendencias": "Pedir à clínica para incluir a refração (item b do edital) no laudo; levar receita e óculos na inspeção",
+      "observacoes": "Laudo do Dr. Magnum A. de Oliveira (CRM-MS 8253) entregue em 03/11/2026 (papel).",
       "pago": false,
-      "data_realizacao": null,
-      "data_resultado": null,
+      "data_realizacao": "03/11/2026",
+      "data_resultado": "03/11/2026",
       "protocolo": "",
       "codigo_acompanhamento": "",
       "opcoes_contato": [
@@ -1761,12 +1909,11 @@
     }
   ],
   "prioridades": [
-    "Toxicológico feito em 29/10: acompanhar o resultado (entre 06/11 e 13/11)",
-    "Retirar resultados da Ultramedical a partir das 17h: Beta HCG 30/10; maioria dos laboratoriais e EAS 03/11; ultrassom e ECG 04/11; hepatites e HIV 05/11; raios-X e Chagas 09/11",
-    "Pedir à Ultramedical para antecipar o laudo do preventivo (entrega prevista em 11/11)",
-    "03/11: SUS 07h00 (jejum), oftalmológico 09h00 com Dr. Magno e psicológico 14h00 com Carolina Quevedo",
+    "Pedir ao Meu Oftalmo para incluir a refração no laudo e providenciar a receita dos óculos",
+    "Retirar ECG (Ultramedical, após 17h de 04/11) e preventivo (11/11; pedir para antecipar)",
     "05/11 09h00: panorâmica na CIOF (levar pedido ou foto e documento; sem brincos/piercings, cabelo preso)",
-    "Confirmar se o laudo da panorâmica da CIOF atende à avaliação odontológica do edital"
+    "Confirmar se o laudo da panorâmica da CIOF atende à avaliação odontológica do edital",
+    "Registrar o resultado do psicológico (Carolina Quevedo) e da coleta do SUS de 03/11"
   ],
   "documentos": [
     {

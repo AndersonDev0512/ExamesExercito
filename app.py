@@ -5,15 +5,20 @@ reutilizáveis de formatação, cálculo financeiro, prazos e validação.
 """
 
 import copy
+import hmac
 import html
+import io
 import json
 import re
 import unicodedata
+import zipfile
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+
+import portais
 
 st.set_page_config(
     page_title="Exames Exército",
@@ -1037,6 +1042,15 @@ h1 {font-size:1.7rem !important;}
   .cal .m .lg {display:none;}
   .cal .m .sm {display:inline;}
 }
+@media print {
+  header, footer, [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stSidebar"],
+  [data-testid="stSidebarCollapsedControl"], [data-baseweb="tab-list"], .stButton, .stDownloadButton,
+  [data-testid="stFileUploader"], [data-testid="stExpander"], [data-testid="stCheckbox"],
+  .nao-imprimir {display:none !important;}
+  .stApp, .block-container {padding:0 !important; margin:0 !important; max-width:100% !important;}
+  [data-testid="stImage"], [data-testid="stImageContainer"] {break-inside:avoid; page-break-inside:avoid;}
+  .laudo-pagina {break-after:page; page-break-after:always;}
+}
 </style>
 """
 
@@ -1661,6 +1675,217 @@ def render_protocols(data):
         st.dataframe(style_cells(df, ["Status"]), hide_index=True, width="stretch")
 
 
+SECRETS_MODELO = """[resultados]
+senha_app = "escolha-uma-senha"   # senha para abrir a aba Resultados
+
+[resultados.ultramedical]
+cpf = "00000000000"
+senha = "senha-impressa-no-protocolo"
+
+[resultados.sodre]
+cpf = "000.000.000-00"
+senha = "senha-do-protocolo-de-coleta"
+"""
+
+PORTAIS = {
+    "ultramedical": ("Ultramedical", portais.ultramedical_buscar),
+    "sodre": ("Sodré (toxicológico)", portais.sodre_buscar),
+}
+
+
+def secrets_resultados():
+    try:
+        return st.secrets.get("resultados", {})
+    except Exception:  # sem secrets.toml / secrets do Cloud
+        return {}
+
+
+def chave_portal(texto):
+    return re.sub(r"\s+", " ", normalize(texto)).strip()
+
+
+@st.cache_data(max_entries=12, show_spinner=False)
+def pdf_paginas_png(pdf, dpi=110):
+    import fitz  # PyMuPDF
+
+    with fitz.open(stream=pdf, filetype="pdf") as doc:
+        return [pagina.get_pixmap(dpi=dpi).tobytes("png") for pagina in doc]
+
+
+def buscar_resultados(cfg):
+    busca = {"quando": datetime.now(FUSO_MS), "portais": {}, "erros": {}}
+    for chave, (nome, funcao) in PORTAIS.items():
+        cred = cfg.get(chave) or {}
+        if not cred.get("cpf") or not cred.get("senha"):
+            busca["erros"][chave] = f"{nome}: CPF e senha não configurados nos secrets."
+            continue
+        with st.spinner(f"Consultando {nome}..."):
+            try:
+                busca["portais"][chave] = funcao(cred["cpf"], cred["senha"])
+            except portais.PortalErro as exc:
+                busca["erros"][chave] = str(exc)
+            except Exception as exc:  # rede, timeout, mudança no site
+                busca["erros"][chave] = f"{nome}: falha na consulta ({type(exc).__name__})."
+    st.session_state.resultados_busca = busca
+
+
+def situacao_no_portal(exame, busca):
+    ref = exame.get("portal_ref") or {}
+    resultado = (busca or {}).get("portais", {}).get(ref.get("portal"))
+    if not ref:
+        return "Sem portal"
+    if resultado is None:
+        return "Não consultado"
+    if ref.get("portal") == "sodre":
+        item = next((i for i in resultado.itens if i.get("os") == ref.get("os")), None)
+    else:
+        chave = chave_portal(ref.get("descricao", ""))
+        item = next((i for i in resultado.itens if chave_portal(i["descricao"]) == chave), None)
+    return item["status"] if item else "Ainda não aparece"
+
+
+def disponivel(situacao):
+    return situacao.lower().startswith(("dispon", "laudo liberado"))
+
+
+def _marcar_recebidos(ids, dia):
+    data = st.session_state.data
+    for e in data["exames"]:
+        if e["id"] in ids and e.get("status") not in STATUS_IGNORADOS | {"Resultado recebido"}:
+            e["status"] = "Resultado recebido"
+            e["data_resultado"] = e.get("data_resultado") or dia
+            e["data_realizacao"] = e.get("data_realizacao") or dia
+    ok, msg = save_data_file(data)
+    st.session_state.dirty = not ok
+    st.session_state.flash_resultados = [f"{len(ids)} exame(s) marcados como “Resultado recebido”.",
+                                         msg + " " + AVISO_ARMAZENAMENTO if ok else msg]
+
+
+def render_laudo(titulo, conteudo, nome_arquivo, chave):
+    st.markdown(f'<div class="laudo-titulo"><h3>📄 {esc(titulo)}</h3></div>', unsafe_allow_html=True)
+    eh_pdf = conteudo[:4] == b"%PDF"
+    st.download_button("⬇️ Baixar", conteudo, file_name=nome_arquivo,
+                       mime="application/pdf" if eh_pdf else None, key=f"baixar_{chave}")
+    if eh_pdf:
+        try:
+            paginas = pdf_paginas_png(conteudo)
+        except Exception as exc:
+            st.error(f"Não foi possível exibir o PDF ({type(exc).__name__}). Use o botão Baixar.")
+            return
+        for n, png in enumerate(paginas, 1):
+            st.image(png, caption=f"{titulo} — página {n} de {len(paginas)}", width="stretch")
+            st.markdown('<div class="laudo-pagina"></div>', unsafe_allow_html=True)
+    else:
+        st.image(conteudo, caption=titulo, width="stretch")
+        st.markdown('<div class="laudo-pagina"></div>', unsafe_allow_html=True)
+
+
+def tab_resultados(data, hoje):
+    st.subheader("🧾 Resultados")
+    cfg = secrets_resultados()
+    if not cfg.get("senha_app"):
+        st.warning(
+            "Para buscar os laudos nos portais, configure os secrets do app. No Streamlit Cloud: "
+            "**Manage app → Settings → Secrets**. Localmente: arquivo `.streamlit/secrets.toml` (não vai para o GitHub)."
+        )
+        st.code(SECRETS_MODELO, language="toml")
+        return
+
+    if not st.session_state.get("resultados_liberado"):
+        st.info("Os laudos têm dados de saúde. Digite a senha da aba para continuar.")
+        with st.form("form_resultados_login"):
+            senha = st.text_input("Senha da aba Resultados", type="password")
+            if st.form_submit_button("Entrar", type="primary"):
+                if hmac.compare_digest(senha.encode(), str(cfg["senha_app"]).encode()):
+                    st.session_state.resultados_liberado = True
+                    st.rerun()
+                st.error("Senha incorreta.")
+        return
+
+    for msg in st.session_state.pop("flash_resultados", []):
+        st.success(msg)
+
+    c1, c2, c3 = st.columns([1.4, 1, 1])
+    if c1.button("🔄 Buscar resultados nos portais", type="primary", width="stretch"):
+        buscar_resultados(cfg)
+    modo_impressao = c2.toggle("🖨️ Só os laudos", help="Esconde as tabelas para imprimir apenas os laudos.")
+    if c3.button("🔒 Sair", width="stretch"):
+        for chave in ("resultados_liberado", "resultados_busca"):
+            st.session_state.pop(chave, None)
+        st.rerun()
+
+    busca = st.session_state.get("resultados_busca")
+    if busca:
+        st.caption(f"Última consulta: {busca['quando'].strftime('%d/%m/%Y %H:%M')}. "
+                   "Os laudos ficam só nesta sessão do navegador; nada é gravado no GitHub.")
+        for erro in busca["erros"].values():
+            st.error(erro)
+    else:
+        st.caption("Toque em “Buscar resultados” para consultar a Ultramedical e a Sodré.")
+
+    if not modo_impressao:
+        exames = [e for e in sorted(data["exames"], key=lambda e: e.get("ordem", 0))
+                  if e.get("status") not in STATUS_IGNORADOS]
+        linhas, para_marcar = [], []
+        for e in exames:
+            situacao = situacao_no_portal(e, busca)
+            if disponivel(situacao) and e.get("status") != "Resultado recebido":
+                para_marcar.append(e["id"])
+            linhas.append({
+                "Exame": e.get("nome", ""),
+                "Status no painel": e.get("status", ""),
+                "No portal": situacao,
+                "Resultado em": fmt_date(e.get("data_resultado"), ""),
+                "Prazo": fmt_date(e.get("prazo_resultado"), "—"),
+            })
+        recebidos = sum(1 for e in exames if e.get("status") == "Resultado recebido")
+        kpi_grid([
+            ("Resultados recebidos", f"{recebidos} de {len(exames)}", "", "green"),
+            ("Faltam", len(exames) - recebidos, "", "amber"),
+        ])
+        if para_marcar:
+            st.button(
+                f"✅ Marcar {len(para_marcar)} exame(s) disponíveis como “Resultado recebido”",
+                on_click=_marcar_recebidos, args=(para_marcar, fmt_date(hoje)),
+            )
+        st.dataframe(style_cells(pd.DataFrame(linhas), ["Status no painel"]), hide_index=True, width="stretch",
+                     height=min(38 * (len(linhas) + 1) + 4, 520))
+
+        sodre = (busca or {}).get("portais", {}).get("sodre")
+        for os_num, det in (sodre.detalhes.items() if sodre else []):
+            with st.expander(f"🧪 Toxicológico — OS {os_num}: andamento da amostra"):
+                st.markdown(f"**Laudo nº** {det.get('laudo') or '—'} · **válido até** {fmt_date(det.get('validade'))}")
+                st.dataframe(pd.DataFrame([
+                    {"Data": f"{e['data']} {e['hora']}", "Etapa": e["procedimento"],
+                     "Ocorrência": "Sim" if e["ocorrencia"] else ""}
+                    for e in det["etapas"]
+                ]), hide_index=True, width="stretch")
+
+    st.markdown("#### 📑 Laudos — um embaixo do outro, para imprimir")
+    st.caption("Para imprimir: ative “Só os laudos” e use o menu do navegador (Ctrl+P / Compartilhar → Imprimir).")
+    laudos = [l for r in (busca or {}).get("portais", {}).values() for l in r.laudos]
+    anexos = st.file_uploader(
+        "Adicionar laudos em papel (foto ou PDF) — ficam só nesta sessão",
+        type=["pdf", "png", "jpg", "jpeg"], accept_multiple_files=True, key="resultados_anexos",
+    )
+    if not laudos and not anexos:
+        st.info("Nenhum laudo para exibir ainda.")
+        return
+    if len(laudos) + len(anexos or []) > 1:
+        zip_buf = io.BytesIO()
+        with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as z:
+            for l in laudos:
+                z.writestr(l.arquivo, l.pdf)
+            for a in anexos or []:
+                z.writestr(a.name, a.getvalue())
+        st.download_button("⬇️ Baixar todos (ZIP)", zip_buf.getvalue(), file_name="laudos.zip",
+                           mime="application/zip", key="baixar_zip")
+    for n, l in enumerate(laudos):
+        render_laudo(l.titulo, l.pdf, l.arquivo, f"portal_{n}")
+    for n, a in enumerate(anexos or []):
+        render_laudo(Path(a.name).stem, a.getvalue(), a.name, f"anexo_{n}")
+
+
 def tab_edital(data):
     st.subheader("📄 Edital PDF")
     render_protocols(data)
@@ -1875,7 +2100,8 @@ def main():
         st.download_button("⬇️ Exportar JSON", data_to_json(data).encode("utf-8"), file_name="data.json",
                            mime="application/json", width="stretch", key="sb_export")
 
-    abas = st.tabs(["Visão geral", "Agenda", "Exames", "Financeiro", "Contatos", "Edital PDF", "Configurações"])
+    abas = st.tabs(["Visão geral", "Agenda", "Exames", "Resultados", "Financeiro", "Contatos", "Edital PDF",
+                    "Configurações"])
     with abas[0]:
         tab_overview(data, rows, agenda, hoje)
     with abas[1]:
@@ -1883,12 +2109,14 @@ def main():
     with abas[2]:
         tab_exams(data, rows)
     with abas[3]:
-        tab_finance(data)
+        tab_resultados(data, hoje)
     with abas[4]:
-        tab_contacts(data)
+        tab_finance(data)
     with abas[5]:
-        tab_edital(data)
+        tab_contacts(data)
     with abas[6]:
+        tab_edital(data)
+    with abas[7]:
         tab_settings(data)
 
     st.divider()
